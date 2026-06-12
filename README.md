@@ -11,7 +11,7 @@ See [astro_birds.md](astro_birds.md) for the migration plan and architecture dec
 | `npm install` | Install dependencies |
 | `npm run dev` | Dev server at `localhost:4321` |
 | `npm run build` | Production build to `./dist/` |
-| `npm run preview` | Preview the production build |
+| `npx netlify serve` | Preview the production build locally (Netlify CLI; `astro preview` is not supported by the Netlify adapter) |
 
 ## Environment
 
