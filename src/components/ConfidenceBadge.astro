@@ -1,0 +1,18 @@
+---
+// Color-coded confidence badge: ≥90% green, 70–89% yellow, <70% gray
+interface Props {
+  confidence: number;
+}
+
+const { confidence } = Astro.props;
+const colorClass =
+  confidence >= 0.9
+    ? "bg-green-100 text-green-800"
+    : confidence >= 0.7
+      ? "bg-yellow-100 text-yellow-800"
+      : "bg-gray-100 text-gray-800";
+---
+
+<span class={`inline-block px-2 py-1 rounded text-sm font-medium ${colorClass}`}>
+  {Math.round(confidence * 100)}%
+</span>

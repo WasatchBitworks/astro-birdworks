@@ -1,28 +1,213 @@
 ---
-// Phase 1 checkpoint shell — replaced by the full homepage in Phase 3.
 import Base from "../layouts/Base.astro";
+import ActivityOverview from "../components/home/ActivityOverview.astro";
+import ConfidenceBadge from "../components/ConfidenceBadge.astro";
+import DataUpdated from "../components/DataUpdated.astro";
 import { getBirdsData } from "../lib/birds";
+import { toMountainDate, toMountainTime } from "../lib/datetime";
+import { slugify } from "../lib/slug";
 
 const birds = await getBirdsData();
 const totalDetections = birds.species.reduce((sum, s) => sum + s.detection_count, 0);
+const featuredSix = birds.featuredPhotos.slice(0, 6);
+const todayTen = birds.today.slice(0, 10);
 ---
 
-<Base title="Home" description="Live bird detections and species data from the Wasatch Front, Utah.">
-  <div class="max-w-7xl mx-auto px-4 py-12">
-    <h1 class="text-4xl font-bold text-forest-green mb-6">Wasatch BirdWorks</h1>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6">
-        <div class="text-3xl font-bold text-forest-green mb-1">{totalDetections.toLocaleString()}</div>
-        <div class="text-sm text-gray-600">Total Detections All Time</div>
-      </div>
-      <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6">
-        <div class="text-3xl font-bold text-sky-blue mb-1">{birds.species.length}</div>
-        <div class="text-sm text-gray-600">Species Detected</div>
-      </div>
-      <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-md p-6">
-        <div class="text-3xl font-bold text-sun-orange mb-1">{birds.photos.length}</div>
-        <div class="text-sm text-gray-600">Photos</div>
+<Base
+  title="Live Bird Detections"
+  description="Real-time bird identification from the Wasatch Front, Utah. Powered by BirdNET-Pi artificial intelligence."
+>
+  <!-- Hero Section -->
+  <section
+    class="relative text-white py-12 md:py-20"
+    style="background: linear-gradient(135deg, var(--color-forest-green) 0%, var(--color-leaf-green) 50%, var(--color-sky-blue) 100%);"
+  >
+    <div class="relative max-w-7xl mx-auto px-4 text-center">
+      <h1 class="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight leading-tight">
+        Live Bird Detections<br />
+        <span class="text-white text-2xl sm:text-3xl md:text-4xl">from the Wasatch Front</span>
+      </h1>
+      <p class="text-base sm:text-xl md:text-2xl mb-6 md:mb-8 max-w-3xl mx-auto text-gray-100 px-2">
+        Real-time bird identification powered by BirdNET-Pi artificial intelligence. Watch as our AI system identifies birds by their calls and songs.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4">
+        <a href="/live" class="btn-primary hover:scale-105 px-6 md:px-8 py-3 md:py-4 rounded-lg text-base md:text-lg transition">
+          View Live Detections
+        </a>
+        <a href="/about" class="border-2 border-white hover:bg-white hover:text-slate-900 text-white font-bold px-6 md:px-8 py-3 md:py-4 rounded-lg text-base md:text-lg transition">
+          How It Works
+        </a>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Total Detections All Time -->
+        <div class="text-center p-6 rounded-lg bg-gradient-to-br from-green-50 to-green-100">
+          <div class="text-4xl font-bold text-green-800 mb-2">{totalDetections}</div>
+          <div class="text-gray-700 font-medium">Total Detections</div>
+          <div class="text-sm text-gray-600 mt-1">All time</div>
+        </div>
+
+        <!-- Species Count -->
+        <div class="text-center p-6 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100">
+          <div class="text-4xl font-bold text-blue-800 mb-2">{birds.species.length}</div>
+          <div class="text-gray-700 font-medium">Species Detected</div>
+          <div class="text-sm text-gray-600 mt-1">All time</div>
+        </div>
+
+        <!-- Status -->
+        <div class="text-center p-6 rounded-lg bg-gradient-to-br from-orange-50 to-orange-100">
+          <div class="text-4xl font-bold text-orange-800 mb-2">
+            {birds.today.length > 0 ? "✓ Live" : "○ Ready"}
+          </div>
+          <div class="text-gray-700 font-medium">System Status</div>
+          <div class="text-sm text-gray-600 mt-1">Active monitoring</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <ActivityOverview birds={birds} />
+
+  <!-- Featured Photos -->
+  {featuredSix.length > 0 && (
+    <section class="py-12 bg-white">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="text-center mb-8">
+          <h2 class="text-3xl font-bold text-slate-800 mb-2">Featured Photos</h2>
+          <p class="text-lg text-gray-600 mb-1">Beautiful bird photography from the Wasatch Front</p>
+          <p class="text-sm text-gray-500 italic">Photography by Zachary Kane</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {featuredSix.map((photo) => (
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              {photo.species ? (
+                <a href={`/species/${slugify(photo.species.common_name)}/`} class="block">
+                  <div class="aspect-square bg-gray-100">
+                    <img
+                      src={photo.variants.medium?.url}
+                      alt={photo.species.common_name}
+                      class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                </a>
+              ) : (
+                <div class="block">
+                  <div class="aspect-square bg-gray-100">
+                    <img
+                      src={photo.variants.medium?.url}
+                      alt="Bird photo"
+                      class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              )}
+              <div class="p-4">
+                {photo.species && (
+                  <>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">{photo.species.common_name}</h3>
+                    {photo.species.scientific_name && (
+                      <p class="text-sm text-gray-600 italic">{photo.species.scientific_name}</p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="text-center">
+          <a href="/photos" class="text-green-700 hover:text-green-900 font-medium text-lg">
+            View Full Gallery ({birds.photos.length} photos) →
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Detections Today -->
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-slate-800 mb-4">Detections Today</h2>
+        <p class="text-lg text-gray-600">Birds identified on {toMountainDate(birds.todayDate)}</p>
+      </div>
+
+      {birds.today.length > 0 ? (
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-100 border-b">
+                <tr>
+                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Species</th>
+                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Confidence</th>
+                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {todayTen.map((detection) => (
+                  <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3">
+                      <div class="font-medium text-gray-900">{detection.common_name}</div>
+                      <div class="text-sm text-gray-500 italic">{detection.scientific_name}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <ConfidenceBadge confidence={detection.confidence} />
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{toMountainTime(detection.detected_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {birds.today.length > 10 && (
+            <div class="px-4 py-3 bg-gray-50 text-center">
+              <a href="/live" class="text-green-700 hover:text-green-900 font-medium">
+                View all {birds.today.length} detections →
+              </a>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">No detections today yet</h3>
+          <p class="text-gray-600">The system is actively monitoring. Birds detected today will appear here!</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- What is BirdNET -->
+  <section class="py-12 bg-white">
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-slate-800 mb-4">What is BirdNET?</h2>
+      </div>
+      <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+        <p class="mb-4">
+          BirdNET is a research platform that uses artificial intelligence to identify bird species by their sounds.
+          Developed by the Cornell Lab of Ornithology and Chemnitz University of Technology, it can recognize over 6,000 bird species worldwide.
+        </p>
+        <p class="mb-4">
+          Our BirdNET-Pi installation continuously monitors audio from the Wasatch Front in Utah, identifying birds in real-time
+          and building a comprehensive database of local bird activity.
+        </p>
+        <div class="text-center mt-8">
+          <a href="/about" class="btn-primary px-6 py-3 rounded-lg inline-block">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <DataUpdated generatedAt={birds.generatedAt} />
 </Base>

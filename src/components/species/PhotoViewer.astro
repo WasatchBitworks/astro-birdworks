@@ -120,7 +120,7 @@ const lightboxPhotos = photos.map((p) => ({
   </div>
 </div>
 
-<script type="application/json" id="lightboxPhotosData" set:html={JSON.stringify(lightboxPhotos)} />
+<script is:inline type="application/json" id="lightboxPhotosData" set:html={JSON.stringify(lightboxPhotos)} />
 
 <script>
   // Photo viewer + lightbox, ported from birdworks species-detail.js

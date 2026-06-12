@@ -1,0 +1,176 @@
+---
+import type { BirdsData } from "../../lib/birds";
+import { findPhotoBySpecies } from "../../lib/photos";
+import { slugify } from "../../lib/slug";
+
+interface Props {
+  birds: BirdsData;
+}
+
+const { birds } = Astro.props;
+const last14Days = birds.daily.slice(0, 14).reverse();
+const top10Species = birds.species.slice(0, 10);
+---
+
+<section class="py-12 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-slate-800 mb-4">Activity Overview</h2>
+      <p class="text-lg text-gray-600">Daily counts, hourly rhythm, and top species</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 md:items-stretch">
+      <!-- Left Column: Daily Detections + Hourly Average -->
+      <div class="flex flex-col">
+        <!-- Daily Detections Card -->
+        <div class="bg-white rounded-lg shadow-md flex-shrink-0 mb-8">
+          <div class="p-6 border-b">
+            <h3 class="text-xl font-bold text-gray-900">Daily Detections</h3>
+            <p class="text-sm text-gray-600 mt-1">Last 14 days</p>
+          </div>
+          <div class="p-6" data-chart="daily">
+            {last14Days.length > 0 ? (
+              <div class="space-y-2">
+                {last14Days.map((day) => (
+                  <div class="flex justify-between items-center py-2 border-b last:border-b-0">
+                    <span class="text-sm text-gray-700">{day.date}</span>
+                    <span class="font-semibold text-gray-900">{day.count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div class="text-center py-8">
+                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <p class="text-gray-600">No daily data available yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <!-- Average Hourly Activity Chart -->
+        <div class="bg-white rounded-lg shadow-md flex-1 flex flex-col mb-4">
+          <div class="p-6 border-b flex-shrink-0">
+            <h3 class="text-xl font-bold text-gray-900">Average Hourly Activity</h3>
+            <p class="text-sm text-gray-600 mt-1">Average detections per hour (last 14 days)</p>
+          </div>
+          <div class="p-6 flex-1" data-chart="hourly-average" data-has-recent={birds.recent.length > 0 ? "true" : undefined}>
+            {birds.recent.length > 0 ? (
+              <div class="text-sm text-gray-600 text-center py-8">Loading hourly activity chart...</div>
+            ) : (
+              <div class="text-center py-8">
+                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-gray-600">Not enough data yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <!-- Link to Explore Page -->
+        <div class="text-center flex-shrink-0">
+          <a href="/explore" class="text-green-700 hover:text-green-900 font-medium text-lg">
+            View Advanced Charts & Analysis →
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Column: Top Species Card -->
+      <div class="flex flex-col">
+        <div class="bg-white rounded-lg shadow-md flex flex-col flex-1 mb-4">
+          <div class="p-6 border-b flex-shrink-0">
+            <h3 class="text-xl font-bold text-gray-900">Top Species</h3>
+            <p class="text-sm text-gray-600 mt-1">Most detected birds</p>
+          </div>
+          <div class="p-6 flex-1 flex flex-col overflow-y-auto" data-chart="species">
+            {top10Species.length > 0 ? (
+              <div class="flex flex-col gap-0 flex-1">
+                {top10Species.map((species) => {
+                  const speciesPhoto = findPhotoBySpecies(birds.photos, species.common_name);
+                  const thumbnail = speciesPhoto?.variants.thumbnail;
+                  return (
+                    <a
+                      href={`/species/${slugify(species.common_name)}/`}
+                      class="flex items-center gap-3 py-2 border-b last:border-b-0 hover:bg-gray-50 px-2 -mx-2 rounded transition flex-1 min-h-0"
+                    >
+                      <div class="flex-shrink-0">
+                        {thumbnail ? (
+                          <img
+                            src={thumbnail.url}
+                            alt={species.common_name}
+                            class="w-12 h-12 rounded-lg object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div class="flex-1 min-w-0 pr-4">
+                        <div class="text-sm font-medium text-gray-900 truncate">{species.common_name}</div>
+                        <div class="text-xs text-gray-500 italic truncate">{species.scientific_name}</div>
+                      </div>
+                      <span class="font-semibold text-gray-900 flex-shrink-0">{species.detection_count}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <div class="text-center py-8 flex flex-col items-center justify-center flex-1">
+                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <p class="text-gray-600">No species data available yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <!-- Link to Species Page -->
+        <div class="text-center flex-shrink-0">
+          <a href="/species" class="text-green-700 hover:text-green-900 font-medium text-lg">
+            View All Species ({birds.species.length}) →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { apiRoot } from "../../lib/client-api";
+  import { extractDailyData, renderDailyChart, renderHourlyAverage } from "../../lib/charts";
+
+  // Daily detections: replace fallback list with bar chart
+  const dailyContainer = document.querySelector('[data-chart="daily"]');
+  if (dailyContainer) {
+    const dailyData = extractDailyData(dailyContainer);
+    if (dailyData.length > 0) {
+      renderDailyChart(dailyContainer, dailyData);
+    }
+  }
+
+  // Average hourly activity: fetch last 30 days of detections.
+  // (birdworks embedded birds.recent as a JSON attribute — multiple MB of
+  // HTML; same chart, much lighter page, same 5-min-cached endpoint.)
+  const hourlyAverageContainer = document.querySelector<HTMLElement>('[data-chart="hourly-average"]');
+  if (hourlyAverageContainer && hourlyAverageContainer.dataset.hasRecent) {
+    fetch(`${apiRoot()}/detections/recent?days=30`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        const detections = data.detections || [];
+        if (detections.length > 0) {
+          renderHourlyAverage(hourlyAverageContainer, detections);
+        }
+      })
+      .catch((error) => console.error("Failed to load recent detections for hourly average:", error));
+  }
+</script>

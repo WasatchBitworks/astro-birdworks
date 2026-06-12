@@ -1,0 +1,261 @@
+---
+import Base from "../layouts/Base.astro";
+import DataUpdated from "../components/DataUpdated.astro";
+import { getBirdsData } from "../lib/birds";
+import { findPhotoBySpecies } from "../lib/photos";
+
+const birds = await getBirdsData();
+const dailyReversed = [...birds.daily].reverse();
+const top15Species = birds.species.slice(0, 15);
+---
+
+<Base
+  title="Explore Data"
+  description="Interactive charts and visualizations exploring bird detection patterns, activity trends, and species insights."
+>
+  <!-- Hero Section -->
+  <section
+    class="relative text-white py-12 md:py-16"
+    style="background: linear-gradient(135deg, var(--color-sky-blue) 0%, var(--color-leaf-green) 50%, var(--color-forest-green) 100%);"
+  >
+    <div class="relative max-w-7xl mx-auto px-4 text-center">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight">Explore Bird Data</h1>
+      <p class="text-base sm:text-lg md:text-xl mb-6 max-w-3xl mx-auto text-gray-100 px-2">
+        Dive deep into detection patterns, activity trends, and species insights from our BirdNET-Pi monitoring system.
+      </p>
+    </div>
+  </section>
+
+  <!-- Extended Timeline (30 days) -->
+  <section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="bg-white rounded-lg shadow-md">
+        <div class="p-6 border-b">
+          <h2 class="text-2xl font-bold text-gray-900">Detection Timeline</h2>
+          <p class="text-sm text-gray-600 mt-1">Daily detections over the last 30 days</p>
+        </div>
+        <div class="p-6" data-chart="timeline-extended">
+          {dailyReversed.length > 0 ? (
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Date</th>
+                    <th class="px-4 py-2 text-right font-semibold text-gray-700">Detections</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyReversed.map((day) => (
+                    <tr class="border-b last:border-b-0">
+                      <td class="px-4 py-2 text-gray-700">{day.date}</td>
+                      <td class="px-4 py-2 text-right font-semibold text-gray-900">{day.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div class="text-center py-12">
+              <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <p class="text-gray-600">No daily data available yet</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Daily Hourly Activity Patterns (Advanced) -->
+  <section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="bg-white rounded-lg shadow-md">
+        <div class="p-6 border-b">
+          <h2 class="text-2xl font-bold text-gray-900">Daily Hourly Activity Patterns</h2>
+          <p class="text-sm text-gray-600 mt-1">Detailed view of hourly detection patterns for each day over the last 30 days</p>
+        </div>
+        <div class="p-6" data-chart="daily-hourly-patterns" data-has-recent={birds.recent.length > 0 ? "true" : undefined}>
+          {birds.recent.length > 0 ? (
+            <div class="text-sm text-gray-600 text-center py-8">Loading daily hourly activity patterns...</div>
+          ) : (
+            <div class="text-center py-12">
+              <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <p class="text-gray-600">Not enough data yet</p>
+            </div>
+          )}
+        </div>
+        <div class="px-6 pb-6 border-t pt-4">
+          <p class="text-sm text-gray-600 mb-4">
+            <em>Individual daily patterns (thin gray lines) are overlaid with group averages showing typical activity for the busiest and quietest days, plus the overall 30-day rolling average.</em>
+          </p>
+          <div class="text-xs font-semibold text-gray-700 mb-2">Chart Legend:</div>
+          <div class="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-0.5 bg-gray-400 opacity-50"></div>
+              <span><strong class="text-gray-900">Gray lines</strong> = Individual daily patterns</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-1 bg-amber-400"></div>
+              <span><strong class="text-gray-900">Orange line</strong> = Top 10% most active days (average)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-1 bg-cyan-500"></div>
+              <span><strong class="text-gray-900">Teal line</strong> = Bottom 10% least active days (average)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-16 h-1 rounded" style="background-color: #4A7C2C;"></div>
+              <span><strong class="text-gray-900">Green line</strong> = 30-day rolling average</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Species Comparison -->
+  <section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="bg-white rounded-lg shadow-md">
+        <div class="p-6 border-b">
+          <h2 class="text-2xl font-bold text-gray-900">Top Species Activity</h2>
+          <p class="text-sm text-gray-600 mt-1">Detection frequency for the most common species</p>
+        </div>
+        <div class="p-6" data-chart="species-comparison">
+          {top15Species.length > 0 ? (
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Species</th>
+                    <th class="px-4 py-2 text-right font-semibold text-gray-700">Total Detections</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {top15Species.map((species) => {
+                    const speciesPhoto = findPhotoBySpecies(birds.photos, species.common_name);
+                    const thumbnail = speciesPhoto?.variants.thumbnail;
+                    return (
+                      <tr class="border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3">
+                          <div class="flex items-center gap-3">
+                            <div class="flex-shrink-0">
+                              {thumbnail ? (
+                                <img
+                                  src={thumbnail.url}
+                                  alt={species.common_name}
+                                  class="w-10 h-10 rounded-lg object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div class="font-medium text-gray-900">{species.common_name}</div>
+                              <div class="text-xs text-gray-500 italic">{species.scientific_name}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-4 py-3 text-right font-semibold text-gray-900">{species.detection_count}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div class="text-center py-12">
+              <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <p class="text-gray-600">No species data available yet</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Insights Section -->
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-slate-800 mb-4">About This Data</h2>
+      </div>
+      <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+        <p class="mb-4">
+          This page provides detailed visualizations of bird detection data collected by our BirdNET-Pi system.
+          All timestamps are displayed in Mountain Time (MT), and detection confidence levels are calculated by the AI model.
+        </p>
+        <div class="grid md:grid-cols-2 gap-6 mt-6">
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-bold text-lg mb-2 text-gray-900">Extended Timeline</h3>
+            <p class="text-sm text-gray-600">Track detection trends over weeks and months to observe seasonal changes and migration patterns.</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-bold text-lg mb-2 text-gray-900">Species Comparison</h3>
+            <p class="text-sm text-gray-600">Compare detection frequencies across different species to understand which birds are most common in our area.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <DataUpdated generatedAt={birds.generatedAt} label="Data snapshot as of" />
+</Base>
+
+<script>
+  import { apiRoot } from "../lib/client-api";
+  import { extractTableData, renderExtendedTimeline, renderSpeciesComparison } from "../lib/charts";
+  import { aggregateByDayAndHour, buildActivityPatternsSVG } from "../lib/activity-patterns";
+
+  // Detection timeline: replace fallback table with bar chart
+  const timelineContainer = document.querySelector('[data-chart="timeline-extended"]');
+  if (timelineContainer) {
+    const timelineData = extractTableData(timelineContainer);
+    if (timelineData.length > 0) {
+      renderExtendedTimeline(timelineContainer, timelineData);
+    }
+  }
+
+  // Top species activity: replace fallback table with horizontal bars
+  const comparisonContainer = document.querySelector('[data-chart="species-comparison"]');
+  if (comparisonContainer) {
+    const comparisonData = extractTableData(comparisonContainer);
+    if (comparisonData.length > 0) {
+      renderSpeciesComparison(comparisonContainer, comparisonData);
+    }
+  }
+
+  // Daily hourly activity patterns: fetch last 30 days of detections
+  // (birdworks embedded birds.recent as a JSON attribute — multiple MB of HTML)
+  const patternsContainer = document.querySelector<HTMLElement>('[data-chart="daily-hourly-patterns"]');
+  if (patternsContainer && patternsContainer.dataset.hasRecent) {
+    fetch(`${apiRoot()}/detections/recent?days=30`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        const detections = data.detections || [];
+        if (detections.length === 0) return;
+
+        const aggregated = aggregateByDayAndHour(detections);
+        if (aggregated.days.length === 0) return;
+
+        const svg = buildActivityPatternsSVG(aggregated, {
+          ariaLabel: "Daily hourly activity patterns chart",
+        });
+        patternsContainer.innerHTML = "";
+        patternsContainer.appendChild(svg);
+      })
+      .catch((error) => console.error("Failed to load recent detections for activity patterns:", error));
+  }
+</script>
