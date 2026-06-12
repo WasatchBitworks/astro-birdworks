@@ -182,6 +182,33 @@ Dropped intentionally: `netlify/functions/verify-turnstile.js` and Netlify Forms
 
 ---
 
+## Build status (2026-06-12)
+
+All five phases are built. Phases 1–4 committed per phase; see git log.
+
+**Parity audit results:**
+- Every URL in birdworks `_site/` exists in `dist/` (0 missing, incl. all 99 species slugs)
+- Page titles match on all pages (species pages also fix birdworks' doubled "| Wasatch BirdWorks" title bug)
+- Sitemap: 105 URLs at `/sitemap-index.xml`; `/sitemap.xml` 301-redirects to it (netlify.toml); robots.txt updated
+- `astro check`: 0 errors, 0 warnings
+- Server island verified against the dev server: fresh per-request data (361 detections at request vs 355 at build), script payload included
+
+**Deliberate deviations from birdworks (improvements, all noted in commits):**
+1. Nature palette classes (`text-forest-green` etc.) now actually exist — birdworks referenced them without defining them in Tailwind config, so they silently no-opped
+2. `detections/species?limit=500` — birdworks used the default limit of 100 and the site is at 99 species (one away from silent truncation)
+3. Hourly-average + activity-patterns charts fetch `/detections/recent?days=30` client-side instead of embedding 25k detections as a JSON attribute (multi-MB HTML → ~30KB)
+4. `/live` renders stats/chart/table fresh per request via a server island; refresh controls still layer on top
+5. Species page `<title>` no longer doubles the site name
+6. Turnstile function + Netlify Forms wiring dropped (documented as inactive in birdworks)
+
+**Remaining manual deploy steps (Netlify dashboard / GitHub):**
+1. Push this repo to GitHub
+2. Create a new Netlify site from the repo (build cmd + publish dir come from netlify.toml; adapter emits the server-island function automatically)
+3. Optional env var: `BIRDS_API_BASE` (defaults to production CMS)
+4. Verify on the preview domain: /live island loads fresh data, audio playback, presence grids, charts, mobile menu
+5. Create a Netlify build hook, add it as `NETLIFY_BUILD_HOOK` GitHub Actions secret (workflow: `.github/workflows/scheduled-build.yml`)
+6. Run in parallel with the Eleventy site; when satisfied, point wasatchbirdworks.com at the new site, confirm Plausible fires, retire birdworks
+
 ## Open items (decide during build, none blocking)
 
 - View transitions (`<ClientRouter />`): nice polish for species↔photos navigation; try in Phase 5, drop if it fights the scripts

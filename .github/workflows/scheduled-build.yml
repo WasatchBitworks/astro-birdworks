@@ -1,0 +1,17 @@
+name: Hourly Netlify Build
+
+# Rebuild hourly during active hours (~6am–10pm Mountain Time) so build-time
+# bird data stays fresh without overnight waste. Cron is UTC: 12:00–04:00 UTC
+# covers 6am–10pm MDT exactly (shifts one hour during MST — acceptable).
+on:
+  schedule:
+    - cron: "0 12-23 * * *"
+    - cron: "0 0-4 * * *"
+  workflow_dispatch:
+
+jobs:
+  trigger-netlify-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify build hook
+        run: curl -fsS -X POST "${{ secrets.NETLIFY_BUILD_HOOK }}"
