@@ -9,6 +9,7 @@
  * activity-patterns.ts (shared with species detail pages).
  */
 import { formatChartHour, svgLine, svgText } from "./activity-patterns";
+import { toMountainTime } from "./datetime";
 
 function svgRect(x: number, y: number, width: number, height: number, fill: string): SVGRectElement {
   const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -393,11 +394,50 @@ export function getHeatmapColor(intensity: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-/** Daily Detections Summary: species ranking bars + 24-hour heatmap */
+/**
+ * Convert the hourly API response (hours[].species[].count) into the
+ * species-by-hour shape renderDailySummary expects (top 15 by total).
+ * Ported from live-refresh.js updateDailySummaryChartWithHourlyData.
+ */
+export function summaryFromHourly(
+  hours: Array<{ hour: number; species?: Array<{ common_name: string; count: number }> }>,
+): DailySummaryData {
+  const speciesMap = new Map<string, SpeciesHourly>();
+
+  hours.forEach((hourRecord) => {
+    (hourRecord.species || []).forEach((speciesRecord) => {
+      const name = speciesRecord.common_name;
+      if (!speciesMap.has(name)) {
+        speciesMap.set(name, { name, total: 0, hourly: new Array(24).fill(0) });
+      }
+      const speciesData = speciesMap.get(name)!;
+      speciesData.total += speciesRecord.count;
+      speciesData.hourly[hourRecord.hour] = speciesRecord.count;
+    });
+  });
+
+  const speciesArray = Array.from(speciesMap.values())
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 15);
+
+  let maxHourly = 0;
+  speciesArray.forEach((species) => {
+    const max = Math.max(...species.hourly);
+    if (max > maxHourly) maxHourly = max;
+  });
+
+  return { species: speciesArray, maxHourly };
+}
+
+/**
+ * Daily Detections Summary: species ranking bars + 24-hour heatmap.
+ * Matches the live-refresh.js variant (no SVG title/legend — the card
+ * heading lives in the surrounding HTML), which is the only one rendered
+ * in birdworks; the charts.js variant's container no longer exists.
+ */
 export function renderDailySummary(
   container: Element,
   data: DailySummaryData,
-  _dateStr: string | null,
   updatedStr: string | null,
 ): void {
   const numSpecies = data.species.length;
@@ -418,34 +458,10 @@ export function renderDailySummary(
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", "Daily detections summary with species ranking and hourly heatmap");
 
-  // Header
-  const headerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-  const title = svgText(padding.left, 25, "Daily Detections Summary", "18px", "#1f2937", "start");
-  title.setAttribute("font-weight", "bold");
-  headerGroup.appendChild(title);
-
-  const metaY = 45;
-  headerGroup.appendChild(svgText(padding.left, metaY, `${numSpecies} species detected`, "12px", "#6b7280", "start"));
-
-  let updatedTime = "";
-  if (updatedStr) {
-    try {
-      updatedTime = new Date(updatedStr).toLocaleString("en-US", {
-        timeZone: "America/Denver",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      updatedTime = "just now";
-    }
-  }
-  headerGroup.appendChild(svgText(padding.left + 150, metaY, `Last updated: ${updatedTime} MT`, "12px", "#6b7280", "start"));
-
-  svg.appendChild(headerGroup);
+  // Header: just the last-updated stamp (the card heading lives in the page HTML)
+  svg.appendChild(
+    svgText(padding.left, 45, `Last updated: ${toMountainTime(updatedStr)} MT`, "12px", "#6b7280", "start"),
+  );
 
   const divider = svgLine(padding.left, headerHeight, width - padding.right, headerHeight, "#e5e7eb");
   divider.setAttribute("stroke-width", "2");
@@ -517,49 +533,6 @@ export function renderDailySummary(
   const hourAxisLabel = svgText(heatmapStartX + heatmapWidth / 2, hourLabelsY + 15, "Hour of Day (MT)", "11px", "#6b7280", "middle");
   hourAxisLabel.setAttribute("font-style", "italic");
   svg.appendChild(hourAxisLabel);
-
-  // Color legend with gradient
-  const legendY = 35;
-  const legendX = width - 350;
-  const legendWidth = 200;
-  const legendHeight = 12;
-  const gradientId = "heatmap-gradient";
-
-  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-  gradient.setAttribute("id", gradientId);
-  gradient.setAttribute("x1", "0%");
-  gradient.setAttribute("x2", "100%");
-
-  const stops = [
-    { offset: "0%", color: "rgb(220, 252, 231)" },
-    { offset: "25%", color: "rgb(134, 239, 172)" },
-    { offset: "50%", color: "rgb(34, 197, 94)" },
-    { offset: "65%", color: "rgb(16, 185, 129)" },
-    { offset: "75%", color: "rgb(139, 92, 246)" },
-    { offset: "85%", color: "rgb(220, 38, 127)" },
-    { offset: "100%", color: "rgb(239, 68, 68)" },
-  ];
-
-  stops.forEach((stop) => {
-    const stopEl = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-    stopEl.setAttribute("offset", stop.offset);
-    stopEl.setAttribute("stop-color", stop.color);
-    gradient.appendChild(stopEl);
-  });
-
-  defs.appendChild(gradient);
-  svg.appendChild(defs);
-
-  const legendBar = svgRect(legendX, legendY, legendWidth, legendHeight, `url(#${gradientId})`);
-  legendBar.setAttribute("rx", "2");
-  legendBar.setAttribute("stroke", "#d1d5db");
-  legendBar.setAttribute("stroke-width", "1");
-  svg.appendChild(legendBar);
-
-  svg.appendChild(svgText(legendX, legendY - 3, "Detections:", "10px", "#6b7280", "start"));
-  svg.appendChild(svgText(legendX, legendY + legendHeight + 12, "Low", "9px", "#6b7280", "start"));
-  svg.appendChild(svgText(legendX + legendWidth, legendY + legendHeight + 12, "High", "9px", "#6b7280", "end"));
 
   container.innerHTML = "";
   container.appendChild(svg);

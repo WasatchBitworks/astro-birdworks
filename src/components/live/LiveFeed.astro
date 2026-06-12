@@ -1,0 +1,683 @@
+---
+/**
+ * Server island (used with server:defer from live.astro): the static shell
+ * loads instantly and this renders fresh per request — stats cards, daily
+ * summary chart, and the detections table are never build-stale.
+ *
+ * The refresh script below ships with the island payload, so it runs after
+ * this markup is in the DOM (Astro inserts islands via
+ * createContextualFragment, which executes scripts).
+ */
+import { fetchHourly, fetchLatest } from "../../lib/api";
+import { toMountainTime } from "../../lib/datetime";
+import ConfidenceBadge from "../ConfidenceBadge.astro";
+
+let detections: Awaited<ReturnType<typeof fetchLatest>>["detections"] = [];
+let hours: Awaited<ReturnType<typeof fetchHourly>>["hours"] = [];
+let fetchError = false;
+
+try {
+  const [latest, hourly] = await Promise.all([fetchLatest(), fetchHourly("today")]);
+  detections = latest.detections;
+  hours = hourly.hours;
+} catch (error) {
+  console.error("LiveFeed island fetch failed:", error);
+  fetchError = true;
+}
+
+const generatedAt = new Date().toISOString();
+
+const totalDetections = hours.reduce((sum, h) => sum + h.total, 0);
+const uniqueSpecies = new Set(hours.flatMap((h) => h.species.map((s) => s.common_name))).size;
+
+let peakHour = 0;
+let peakCount = 0;
+hours.forEach((h) => {
+  if (h.total > peakCount) {
+    peakCount = h.total;
+    peakHour = h.hour;
+  }
+});
+const formattedPeakHour =
+  peakHour === 0 ? "12 AM" : peakHour < 12 ? `${peakHour} AM` : peakHour === 12 ? "12 PM" : `${peakHour - 12} PM`;
+
+const totalPages = Math.ceil(detections.length / 20);
+---
+
+<div id="liveFeedRoot" data-generated-at={generatedAt}>
+  {detections.length > 0 ? (
+    <>
+      <!-- Stats Summary -->
+      <div class="grid md:grid-cols-4 gap-4 mb-8" id="statsContainer">
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+          <div id="statDetections" class="text-2xl font-bold text-green-700">{totalDetections}</div>
+          <div class="text-sm text-gray-600">Detections</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+          <div id="statSpecies" class="text-2xl font-bold text-blue-700">{uniqueSpecies}</div>
+          <div class="text-sm text-gray-600">Unique Species</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+          <div id="statPeakHour" class="text-2xl font-bold text-orange-700">{formattedPeakHour}</div>
+          <div class="text-sm text-gray-600">Peak Hour</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+          <div class="text-2xl font-bold text-purple-700">
+            <span class="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></span>
+            Live
+          </div>
+          <div class="text-sm text-gray-600">System Active</div>
+        </div>
+      </div>
+
+      <!-- Daily Summary Chart (Live Data) -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="border-b pb-4 mb-4">
+          <h2 class="text-2xl font-bold text-gray-900">Daily Detections Summary</h2>
+          <p class="text-sm text-gray-600 mt-1">Top species and hourly activity patterns for today</p>
+        </div>
+        <div id="dailySummaryChart" data-hourly={JSON.stringify(hours)} data-updated={generatedAt}>
+          {hours.length > 0 ? (
+            <div class="text-sm text-gray-600 text-center py-8">
+              Loading interactive chart with species rankings and hourly activity patterns...
+            </div>
+          ) : (
+            <div class="text-center py-12">
+              <p class="text-gray-600">No detections yet</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <!-- Detections Table -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden" id="detectionsTableContainer">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-2xl font-bold text-gray-900">Recent Detections</h2>
+          <p class="text-sm text-gray-600 mt-1">Most recent detections from today ({detections.length} loaded)</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-100 border-b-2 border-gray-200">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Species</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Confidence</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Date & Time</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200" id="detectionsTableBody">
+              {detections.map((detection) => (
+                <tr class="hover:bg-gray-50 transition" data-detection={JSON.stringify(detection)}>
+                  <td class="px-6 py-4">
+                    <div class="font-semibold text-gray-900">{detection.common_name}</div>
+                    <div class="text-sm text-gray-500 italic">{detection.scientific_name}</div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <ConfidenceBadge confidence={detection.confidence} />
+                      {detection.confidence >= 0.9 && (
+                        <span class="text-xs text-green-600" title="High confidence">✓</span>
+                      )}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-gray-600">
+                    <div class="text-sm">{toMountainTime(detection.detected_at)}</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination Controls -->
+      {detections.length > 20 && (
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-lg shadow p-4">
+          <div class="text-sm text-gray-600" id="paginationInfo">
+            Showing 1-20 of {detections.length}
+          </div>
+
+          <div class="flex items-center gap-4">
+            <button
+              id="prevPageBtn"
+              class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              disabled
+              aria-label="Previous page"
+            >
+              ← Previous
+            </button>
+
+            <div class="text-sm font-semibold text-gray-700" id="pageNumber">
+              Page 1 of {totalPages}
+            </div>
+
+            <button
+              id="nextPageBtn"
+              class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              aria-label="Next page"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  ) : (
+    <!-- Empty State -->
+    <div class="bg-white rounded-lg shadow-lg p-16 text-center">
+      <svg class="w-24 h-24 mx-auto mb-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+      </svg>
+      <h2 class="text-2xl font-bold text-gray-800 mb-3">
+        {fetchError ? "Live Data Temporarily Unavailable" : "No Detections Today Yet"}
+      </h2>
+      <p class="text-gray-600 mb-6 max-w-md mx-auto">
+        {fetchError
+          ? "We couldn't reach the detection service. Try the refresh button in a moment."
+          : "The BirdNET-Pi system is active and listening. Birds detected today will appear here!"}
+      </p>
+      <div class="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg">
+        <span class="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
+        System Active
+      </div>
+    </div>
+  )}
+</div>
+
+<script>
+  // Live refresh, ported from birdworks live-refresh.js. Runs when the
+  // server island is inserted, so all referenced elements exist.
+  import { apiRoot, absoluteAudioUrl } from "../../lib/client-api";
+  import { toMountainTime } from "../../lib/datetime";
+  import { renderDailySummary, summaryFromHourly } from "../../lib/charts";
+
+  const REFRESH_INTERVAL = 300000; // 5 minutes (matches BirdNET-Pi sync frequency)
+  const ITEMS_PER_PAGE = 20;
+
+  interface LiveDetection {
+    id: number;
+    common_name: string;
+    scientific_name: string;
+    confidence: number;
+    detected_at: string;
+    preserved: boolean;
+    audio_url: string | null;
+  }
+
+  interface HourRecord {
+    hour: number;
+    total: number;
+    species: Array<{ common_name: string; count: number }>;
+  }
+
+  type AudioButton = HTMLButtonElement & { _audio?: HTMLAudioElement };
+
+  // State
+  let autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
+  let isRefreshing = false;
+  let currentPage = 1;
+  let allDetections: LiveDetection[] = [];
+  let hourlyData: HourRecord[] = [];
+  let currentlyPlayingAudio: HTMLAudioElement | null = null;
+
+  // DOM elements (controls live in the static shell, data in the island)
+  const refreshBtn = document.getElementById("refreshBtn") as HTMLButtonElement | null;
+  const refreshBtnText = document.getElementById("refreshBtnText");
+  const autoRefreshToggle = document.getElementById("autoRefreshToggle") as HTMLInputElement | null;
+  const statusText = document.getElementById("statusText");
+  const lastUpdatedTime = document.getElementById("lastUpdatedTime");
+  const detectionsTableBody = document.getElementById("detectionsTableBody");
+  const liveFeedRoot = document.getElementById("liveFeedRoot");
+
+  init();
+
+  function init() {
+    if (!refreshBtn) {
+      console.warn("Live refresh: Required elements not found");
+      return;
+    }
+
+    refreshBtn.addEventListener("click", () => {
+      if (!isRefreshing) refreshDetections();
+    });
+    autoRefreshToggle?.addEventListener("change", handleAutoRefreshToggle);
+
+    document.getElementById("prevPageBtn")?.addEventListener("click", () => goToPage(currentPage - 1));
+    document.getElementById("nextPageBtn")?.addEventListener("click", () => goToPage(currentPage + 1));
+
+    // Initial state comes from the island's server-rendered markup
+    const dailySummaryChart = document.getElementById("dailySummaryChart");
+    if (dailySummaryChart) {
+      try {
+        hourlyData = JSON.parse(dailySummaryChart.getAttribute("data-hourly") || "[]");
+      } catch (e) {
+        console.error("Error parsing hourly JSON:", e);
+        hourlyData = [];
+      }
+    }
+
+    if (detectionsTableBody) {
+      const tableRows = detectionsTableBody.querySelectorAll<HTMLElement>("tr[data-detection]");
+      allDetections = Array.from(tableRows)
+        .map((row) => {
+          try {
+            return JSON.parse(row.dataset.detection!) as LiveDetection;
+          } catch (e) {
+            console.error("Failed to parse detection:", e);
+            return null;
+          }
+        })
+        .filter((d): d is LiveDetection => d !== null);
+    }
+
+    // Reflect the island's render time in the static shell's "Last updated"
+    const generatedAt = liveFeedRoot?.dataset.generatedAt;
+    if (generatedAt && lastUpdatedTime) {
+      lastUpdatedTime.textContent = toMountainTime(generatedAt) + " MT";
+    }
+
+    const hasAudio = allDetections.some((d) => d.audio_url);
+    if (allDetections.length > ITEMS_PER_PAGE || hasAudio) {
+      updateDetectionsTable();
+    }
+
+    updateStatsTotals();
+
+    if (hourlyData.length > 0) {
+      updateDailySummaryChart();
+    }
+
+    // Load auto-refresh preference from localStorage
+    if (autoRefreshToggle && localStorage.getItem("birdworks_auto_refresh") === "true") {
+      autoRefreshToggle.checked = true;
+      startAutoRefresh();
+    }
+  }
+
+  function handleAutoRefreshToggle(e: Event) {
+    const enabled = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("birdworks_auto_refresh", String(enabled));
+
+    if (enabled) {
+      startAutoRefresh();
+      setStatus("Auto-refresh enabled", "text-green-600");
+    } else {
+      stopAutoRefresh();
+      setStatus("Auto-refresh disabled", "text-gray-600");
+    }
+  }
+
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshTimer = setInterval(() => refreshDetections(), REFRESH_INTERVAL);
+  }
+
+  function stopAutoRefresh() {
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+  }
+
+  async function refreshDetections() {
+    if (isRefreshing) return;
+
+    isRefreshing = true;
+    setStatus("Refreshing...", "text-blue-600");
+    if (refreshBtn) refreshBtn.disabled = true;
+    if (refreshBtnText) refreshBtnText.textContent = "Refreshing...";
+
+    try {
+      const [detectionsResponse, hourlyResponse] = await Promise.all([
+        fetch(`${apiRoot()}/latest?date=today&limit=200`, { headers: { Accept: "application/json" } }),
+        fetch(`${apiRoot()}/hourly?date=today`, { headers: { Accept: "application/json" } }),
+      ]);
+
+      if (!detectionsResponse.ok) throw new Error(`Detections API: HTTP ${detectionsResponse.status}`);
+      if (!hourlyResponse.ok) throw new Error(`Hourly API: HTTP ${hourlyResponse.status}`);
+
+      const detectionsData = await detectionsResponse.json();
+      const hourlyApiData = await hourlyResponse.json();
+
+      allDetections = detectionsData.detections || [];
+      hourlyData = hourlyApiData.hours || [];
+      currentPage = 1;
+
+      updateDetectionsTable();
+      updateStatsTotals();
+      updateDailySummaryChart();
+
+      if (lastUpdatedTime) {
+        lastUpdatedTime.textContent = toMountainTime(new Date().toISOString()) + " MT";
+      }
+
+      setStatus("Updated successfully", "text-green-600");
+      setTimeout(() => setStatus("Ready", "text-gray-600"), 3000);
+    } catch (error) {
+      console.error("Refresh failed:", error);
+      setStatus(`Error: ${error instanceof Error ? error.message : error}`, "text-red-600");
+    } finally {
+      isRefreshing = false;
+      if (refreshBtn) refreshBtn.disabled = false;
+      if (refreshBtnText) refreshBtnText.textContent = "Refresh Now";
+    }
+  }
+
+  // --- Pagination -----------------------------------------------------------
+
+  function getTotalPages() {
+    return Math.ceil(allDetections.length / ITEMS_PER_PAGE);
+  }
+
+  function goToPage(page: number) {
+    const totalPages = getTotalPages();
+    if (page < 1 || page > totalPages) return;
+
+    currentPage = page;
+    updateDetectionsTable();
+  }
+
+  function updatePaginationControls() {
+    const totalPages = getTotalPages();
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+    const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, allDetections.length);
+
+    const paginationInfo = document.getElementById("paginationInfo");
+    if (paginationInfo) {
+      paginationInfo.textContent =
+        allDetections.length === 0
+          ? "No detections"
+          : `Showing ${startIndex}-${endIndex} of ${allDetections.length}`;
+    }
+
+    const pageNumber = document.getElementById("pageNumber");
+    if (pageNumber) {
+      pageNumber.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+    }
+
+    const prevBtn = document.getElementById("prevPageBtn") as HTMLButtonElement | null;
+    const nextBtn = document.getElementById("nextPageBtn") as HTMLButtonElement | null;
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages || totalPages === 0;
+  }
+
+  // --- Detections table -----------------------------------------------------
+
+  function updateDetectionsTable() {
+    if (!detectionsTableBody) return;
+
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const detections = allDetections.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const hasAudio = allDetections.some((d) => d.audio_url);
+
+    // Add/remove the audio column header as needed
+    const tableHeader = document.querySelector("#detectionsTableContainer thead tr");
+    if (tableHeader) {
+      const audioHeader = tableHeader.querySelector(".audio-header");
+
+      if (hasAudio && !audioHeader) {
+        const th = document.createElement("th");
+        th.className = "audio-header px-6 py-4 text-left text-sm font-semibold text-gray-700";
+        th.textContent = "Audio";
+        tableHeader.appendChild(th);
+      } else if (!hasAudio && audioHeader) {
+        audioHeader.remove();
+      }
+    }
+
+    detectionsTableBody.innerHTML = "";
+
+    if (allDetections.length === 0) {
+      const emptyRow = document.createElement("tr");
+      const colspan = hasAudio ? 4 : 3;
+      emptyRow.innerHTML = `
+        <td colspan="${colspan}" class="px-6 py-12 text-center text-gray-500">
+          <div class="flex flex-col items-center gap-3">
+            <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+            <p>No detections found</p>
+          </div>
+        </td>
+      `;
+      detectionsTableBody.appendChild(emptyRow);
+      updatePaginationControls();
+      return;
+    }
+
+    detections.forEach((detection) => {
+      detectionsTableBody.appendChild(createDetectionRow(detection, hasAudio));
+    });
+
+    updatePaginationControls();
+  }
+
+  function createDetectionRow(detection: LiveDetection, hasAudioColumn: boolean): HTMLTableRowElement {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-50 transition";
+
+    const confidence = detection.confidence || 0;
+    const confidencePct = Math.round(confidence * 100);
+
+    let confidenceClass = "bg-gray-100 text-gray-800";
+    let confidenceIcon = "";
+
+    if (confidence >= 0.9) {
+      confidenceClass = "bg-green-100 text-green-800";
+      confidenceIcon = '<span class="text-xs text-green-600" title="High confidence">✓</span>';
+    } else if (confidence >= 0.7) {
+      confidenceClass = "bg-yellow-100 text-yellow-800";
+    }
+
+    let audioHtml = "";
+    if (hasAudioColumn) {
+      if (detection.audio_url) {
+        const preservedBadge = detection.preserved
+          ? '<span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Preserved</span>'
+          : "";
+        audioHtml = `
+          <td class="px-6 py-4">
+            <div class="flex flex-col gap-1">
+              <button
+                class="audio-play-btn inline-flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition"
+                data-audio-url="${escapeHtml(detection.audio_url)}"
+                data-detection-id="${detection.id}"
+                aria-label="Play audio for ${escapeHtml(detection.common_name)}">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                </svg>
+                <span>Play</span>
+              </button>
+              ${preservedBadge}
+            </div>
+          </td>
+        `;
+      } else {
+        audioHtml = '<td class="px-6 py-4"></td>';
+      }
+    }
+
+    row.innerHTML = `
+      <td class="px-6 py-4">
+        <div class="font-semibold text-gray-900">${escapeHtml(detection.common_name || "Unknown")}</div>
+        <div class="text-sm text-gray-500 italic">${escapeHtml(detection.scientific_name || "")}</div>
+      </td>
+      <td class="px-6 py-4">
+        <div class="flex items-center gap-2">
+          <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold ${confidenceClass}">
+            ${confidencePct}%
+          </span>
+          ${confidenceIcon}
+        </div>
+      </td>
+      <td class="px-6 py-4 text-gray-600">
+        <div class="text-sm">${toMountainTime(detection.detected_at)}</div>
+      </td>
+      ${audioHtml}
+    `;
+
+    if (detection.audio_url) {
+      const playBtn = row.querySelector<AudioButton>(".audio-play-btn");
+      playBtn?.addEventListener("click", () => handleAudioPlayClick(playBtn, detection));
+    }
+
+    return row;
+  }
+
+  // --- Audio playback -------------------------------------------------------
+
+  async function handleAudioPlayClick(button: AudioButton, detection: LiveDetection) {
+    const audioUrl = detection.audio_url;
+    if (!audioUrl) return;
+
+    // If this button already has audio loaded, just toggle play/pause
+    if (button._audio) {
+      if (button._audio.paused) {
+        button._audio.play();
+      } else {
+        button._audio.pause();
+      }
+      return;
+    }
+
+    if (currentlyPlayingAudio && !currentlyPlayingAudio.paused) {
+      currentlyPlayingAudio.pause();
+    }
+
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `
+      <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Loading...</span>
+    `;
+
+    const pauseHtml = `
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"/>
+      </svg>
+      <span>Pause</span>
+    `;
+
+    try {
+      const response = await fetch(absoluteAudioUrl(audioUrl));
+      if (!response.ok) throw new Error("Audio not available");
+
+      const data = await response.json();
+      if (!data.url) throw new Error("Audio URL not found");
+
+      const audio = new Audio(data.url);
+      button._audio = audio;
+      currentlyPlayingAudio = audio;
+
+      audio.addEventListener("loadeddata", () => {
+        button.innerHTML = pauseHtml;
+        button.disabled = false;
+      });
+
+      audio.addEventListener("play", () => {
+        if (currentlyPlayingAudio && currentlyPlayingAudio !== audio) {
+          currentlyPlayingAudio.pause();
+        }
+        currentlyPlayingAudio = audio;
+        button.innerHTML = pauseHtml;
+      });
+
+      audio.addEventListener("pause", () => {
+        button.innerHTML = originalHTML;
+      });
+
+      audio.addEventListener("ended", () => {
+        button.innerHTML = originalHTML;
+        if (currentlyPlayingAudio === audio) {
+          currentlyPlayingAudio = null;
+        }
+      });
+
+      audio.addEventListener("error", () => {
+        showAudioError(button);
+      });
+
+      audio.play();
+    } catch (error) {
+      console.error("Audio playback failed:", error);
+      showAudioError(button);
+    }
+  }
+
+  function showAudioError(button: AudioButton) {
+    button.innerHTML = `
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+      </svg>
+      <span class="text-xs">Unavailable</span>
+    `;
+    button.disabled = true;
+    button.className = button.className.replace("bg-green-600 hover:bg-green-700", "bg-gray-400 cursor-not-allowed");
+  }
+
+  // --- Stats + chart --------------------------------------------------------
+
+  function updateStatsTotals() {
+    if (hourlyData.length === 0) return;
+
+    const detectionsEl = document.getElementById("statDetections");
+    if (detectionsEl) {
+      detectionsEl.textContent = String(hourlyData.reduce((sum, hour) => sum + hour.total, 0));
+    }
+
+    const speciesEl = document.getElementById("statSpecies");
+    if (speciesEl) {
+      const uniqueSpecies = new Set<string>();
+      hourlyData.forEach((hour) => {
+        (hour.species || []).forEach((s) => uniqueSpecies.add(s.common_name));
+      });
+      speciesEl.textContent = String(uniqueSpecies.size);
+    }
+
+    const peakHourEl = document.getElementById("statPeakHour");
+    if (peakHourEl) {
+      let peakHour = 0;
+      let peakCount = 0;
+      hourlyData.forEach((hour) => {
+        if (hour.total > peakCount) {
+          peakCount = hour.total;
+          peakHour = hour.hour;
+        }
+      });
+
+      peakHourEl.textContent =
+        peakHour === 0 ? "12 AM" : peakHour < 12 ? `${peakHour} AM` : peakHour === 12 ? "12 PM" : `${peakHour - 12} PM`;
+    }
+  }
+
+  function updateDailySummaryChart() {
+    const chartContainer = document.getElementById("dailySummaryChart");
+    if (!chartContainer || hourlyData.length === 0) return;
+
+    const summaryData = summaryFromHourly(hourlyData);
+    if (summaryData.species.length > 0) {
+      renderDailySummary(chartContainer, summaryData, new Date().toISOString());
+    }
+  }
+
+  // --- Helpers ----------------------------------------------------------------
+
+  function setStatus(message: string, className: string) {
+    if (statusText) {
+      statusText.textContent = message;
+      statusText.className = className;
+    }
+  }
+
+  function escapeHtml(unsafe: unknown): string {
+    if (!unsafe) return "";
+    return String(unsafe)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+</script>
