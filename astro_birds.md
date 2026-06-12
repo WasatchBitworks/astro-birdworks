@@ -177,7 +177,7 @@ Dropped intentionally: `netlify/functions/verify-turnstile.js` and Netlify Forms
 ### Phase 5 — Parity audit & deploy
 - Page-by-page checklist against production: content, empty states, no-JS fallbacks, Mountain Time formatting, SEO meta/sitemap/canonical, Lighthouse
 - New Netlify site + preview domain, env vars, security headers in `netlify.toml`
-- GitHub Actions hourly build-hook workflow (copy `.github/workflows/scheduled-build.yml` pattern, new `NETLIFY_BUILD_HOOK` secret)
+- Hourly rebuilds via a Netlify build hook (ended up triggered by Heroku Scheduler, not the originally planned GitHub Actions workflow)
 - Run in parallel; when satisfied: point wasatchbirdworks.com DNS at the new site, confirm Plausible, retire the Eleventy site
 
 ---
@@ -215,10 +215,9 @@ Verification: `npm run verify:live` runs three scenarios locally (happy path; is
 **Deploy status (2026-06-12):** ✅ Live on Netlify at **https://astro-birdworks.netlify.app** (site `astro-birdworks`, Wasatch Bitworks team, deploys from `main`). Clean first deploy; no environment variables set — `BIRDS_API_BASE` defaults to the production CMS in code.
 
 **Remaining steps before DNS swap:**
-1. Verify the deployed /live server island on the real function runtime:
-   `npm run verify:live -- https://astro-birdworks.netlify.app` (covers happy path + island-failure watchdog), plus a manual pass: audio playback, presence grids, charts, mobile menu
-2. Hourly rebuilds: create a Netlify build hook (Site configuration → Build & deploy → Build hooks), add its URL as the `NETLIFY_BUILD_HOOK` GitHub Actions secret (workflow: `.github/workflows/scheduled-build.yml` — already wired, runs 6am–10pm MT)
-3. Run in parallel with the Eleventy site for a while; visually diff pages against wasatchbirdworks.com (watch for remaining Tailwind v3→v4 drift like the bg-opacity/border-color regressions already fixed)
+1. ✅ (2026-06-12) Deployed /live verified on the real function runtime: `npm run verify:live -- https://astro-birdworks.netlify.app` passed all checks (fresh island data, watchdog error state + reload wiring). Also swept every page headlessly: no 4xx/5xx resources; one 500 seen once on a cold start did not reproduce (watchdog covers it). Still pending: a manual pass of audio playback, presence grids, charts, mobile menu
+2. ✅ (2026-06-12) Hourly rebuilds live: Netlify build hook created, triggered hourly at :00 by **Heroku Scheduler** (replaced the planned GitHub Actions workflow; `scheduled-build.yml` removed). Note it runs 24/7 rather than the 6am–10pm MT window the workflow had
+3. Run in parallel with the Eleventy site for a while (full visual diff deemed unnecessary — spot checks of home/explore matched, page heights within ~30px site-wide; still watch for Tailwind v3→v4 drift like the bg-opacity/border-color regressions already fixed)
 4. When satisfied: point wasatchbirdworks.com DNS at the Netlify site, confirm Plausible records traffic (script is pinned to that domain, so it stays silent on the preview URL — expected), retire the birdworks Eleventy site
 
 ## Open items (decide during build, none blocking)
