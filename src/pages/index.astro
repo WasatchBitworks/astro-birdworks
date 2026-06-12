@@ -1,0 +1,28 @@
+---
+// Phase 1 checkpoint shell — replaced by the full homepage in Phase 3.
+import Base from "../layouts/Base.astro";
+import { getBirdsData } from "../lib/birds";
+
+const birds = await getBirdsData();
+const totalDetections = birds.species.reduce((sum, s) => sum + s.detection_count, 0);
+---
+
+<Base title="Home" description="Live bird detections and species data from the Wasatch Front, Utah.">
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <h1 class="text-4xl font-bold text-forest-green mb-6">Wasatch BirdWorks</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6">
+        <div class="text-3xl font-bold text-forest-green mb-1">{totalDetections.toLocaleString()}</div>
+        <div class="text-sm text-gray-600">Total Detections All Time</div>
+      </div>
+      <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6">
+        <div class="text-3xl font-bold text-sky-blue mb-1">{birds.species.length}</div>
+        <div class="text-sm text-gray-600">Species Detected</div>
+      </div>
+      <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-md p-6">
+        <div class="text-3xl font-bold text-sun-orange mb-1">{birds.photos.length}</div>
+        <div class="text-sm text-gray-600">Photos</div>
+      </div>
+    </div>
+  </div>
+</Base>

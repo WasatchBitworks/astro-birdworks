@@ -1,0 +1,59 @@
+---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../lib/site";
+import { getBirdsData } from "../lib/birds";
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description = site.description, ogImage = site.defaultOgImage } = Astro.props;
+const birds = await getBirdsData();
+const canonicalURL = new URL(Astro.url.pathname, site.url);
+---
+
+<!doctype html>
+<html lang="en" data-api-base={birds.apiBase}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{title} | {site.name}</title>
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={`${title} | ${site.name}`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, site.url)} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={`${title} | ${site.name}`} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, site.url)} />
+
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" href="/favicon-96x96.png" type="image/png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+
+    <!-- Plausible Analytics -->
+    <script defer data-domain="wasatchbirdworks.com" src="https://analytics.wasatchbitworks.com/js/script.js"></script>
+  </head>
+
+  <body class="bg-gray-50 text-gray-900 font-sans antialiased scroll-smooth">
+    <Header />
+
+    <main>
+      <slot />
+    </main>
+
+    <Footer generatedAt={birds.generatedAt} />
+  </body>
+</html>

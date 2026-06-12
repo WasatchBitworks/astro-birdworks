@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/*
+ * Wasatch BirdWorks nature palette.
+ * Note: birdworks (Eleventy) used these names in class form (text-forest-green
+ * etc.) without ever defining them in tailwind.config.js, so they silently
+ * no-opped. Defining them here makes the intended design real.
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-forest-green: #2d5016;
+  --color-leaf-green: #4a7c2c;
+  --color-sky-blue: #7bb3e8;
+  --color-earth-brown: #8b6f47;
+  --color-sun-orange: #f4a261;
+  --color-charcoal: #1e293b;
+}
+
+@layer components {
+  .btn-primary {
+    background-color: var(--color-leaf-green);
+    color: #fff;
+    font-weight: 700;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-forest-green);
+  }
+  .badge-live {
+    background-color: var(--color-sun-orange);
+    color: #fff;
+  }
+}

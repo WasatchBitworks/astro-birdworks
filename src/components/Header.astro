@@ -1,0 +1,182 @@
+---
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/live", label: "Live" },
+  { href: "/species", label: "Species" },
+  { href: "/photos", label: "Photos" },
+  { href: "/explore", label: "Explore" },
+  { href: "/about", label: "About" },
+];
+---
+
+<header
+  id="mainHeader"
+  class="text-white py-4 shadow-lg sticky top-0 z-40"
+  style="background: linear-gradient(135deg, #FFFFFF 0%, var(--color-leaf-green) 100%);"
+>
+  <nav class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center">
+        <a href="/" class="flex items-center">
+          <img src="/images/birdworks_tsp_v2.png" alt="Wasatch BirdWorks Logo" class="h-20 w-auto" />
+        </a>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <div class="hidden md:flex space-x-8 text-lg">
+        {navLinks.map(({ href, label }) => (
+          <a href={href} class="hover:opacity-80 transition">{label}</a>
+        ))}
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button
+        id="mobileMenuBtn"
+        class="md:hidden p-2 hover:opacity-80 transition"
+        aria-label="Toggle mobile menu"
+        aria-expanded="false"
+      >
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 space-y-3">
+      {navLinks.map(({ href, label }) => (
+        <a href={href} class="block py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded transition">{label}</a>
+      ))}
+    </div>
+  </nav>
+</header>
+<div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-40 md:hidden hidden z-30"></div>
+
+<style>
+  /* Mobile menu animations */
+  #mobileMenu {
+    position: relative;
+    z-index: 50;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    transform-origin: top;
+  }
+  #mobileMenu.hidden {
+    opacity: 0;
+    transform: scaleY(0.95);
+    pointer-events: none;
+  }
+  #mobileMenu:not(.hidden) {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+
+  #mobileMenuOverlay {
+    transition: opacity 0.3s ease-in-out;
+  }
+  #mobileMenuOverlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #mobileMenuOverlay:not(.hidden) {
+    opacity: 1;
+  }
+
+  /* Header scroll behavior */
+  #mainHeader {
+    transition: transform 0.3s ease-in-out;
+  }
+  #mainHeader.header-hidden {
+    transform: translateY(-100%);
+  }
+</style>
+
+<script>
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
+
+  if (mobileMenuBtn && mobileMenu) {
+    const firstMobileLink = mobileMenu.querySelector("a");
+
+    function setMenuState(open: boolean) {
+      if (open) {
+        mobileMenu!.classList.remove("hidden");
+        mobileMenuOverlay?.classList.remove("hidden");
+        void mobileMenu!.offsetHeight;
+      } else {
+        setTimeout(() => {
+          mobileMenu!.classList.add("hidden");
+          mobileMenuOverlay?.classList.add("hidden");
+        }, 300);
+      }
+
+      mobileMenuBtn!.setAttribute("aria-expanded", open ? "true" : "false");
+      document.body.style.overflow = open ? "hidden" : "";
+
+      if (open && firstMobileLink) {
+        setTimeout(() => firstMobileLink.focus(), 50);
+      }
+    }
+
+    mobileMenuBtn.addEventListener("click", () => {
+      const isOpen = !mobileMenu.classList.contains("hidden");
+      setMenuState(!isOpen);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") setMenuState(false);
+    });
+
+    mobileMenuOverlay?.addEventListener("click", () => setMenuState(false));
+
+    mobileMenu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => setMenuState(false));
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 768) setMenuState(false);
+    });
+  }
+
+  // Header scroll behavior: hide on scroll down, show on scroll up
+  const header = document.getElementById("mainHeader");
+  if (header) {
+    let lastScrollY = window.scrollY;
+    let lastScrollTime = Date.now();
+    let ticking = false;
+    const headerHeight = header.offsetHeight;
+    const velocityThreshold = 1; // pixels per millisecond
+
+    function updateHeaderVisibility() {
+      const currentScrollY = window.scrollY;
+      const currentTime = Date.now();
+      const timeDelta = currentTime - lastScrollTime;
+      const scrollDelta = lastScrollY - currentScrollY;
+      const scrollVelocity = timeDelta > 0 ? scrollDelta / timeDelta : 0;
+
+      // Don't hide header until we've scrolled past its own height
+      if (currentScrollY < headerHeight) {
+        header!.classList.remove("header-hidden");
+      } else if (currentScrollY > lastScrollY) {
+        header!.classList.add("header-hidden");
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up - show only if scrolling fast enough
+        if (scrollVelocity >= velocityThreshold) {
+          header!.classList.remove("header-hidden");
+        }
+      }
+
+      lastScrollY = currentScrollY;
+      lastScrollTime = currentTime;
+      ticking = false;
+    }
+
+    window.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateHeaderVisibility);
+        ticking = true;
+      }
+    });
+  }
+</script>

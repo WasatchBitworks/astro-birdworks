@@ -1,0 +1,31 @@
+---
+import { toMountainTime } from "../lib/datetime";
+
+interface Props {
+  /** Build-time data timestamp shown as "Data updated: …" */
+  generatedAt?: string;
+}
+
+const { generatedAt } = Astro.props;
+---
+
+<footer class="text-white py-8 mt-12 bg-forest-green">
+  <div class="max-w-7xl mx-auto px-4 text-center">
+    <p class="mb-2">
+      &copy; 2026
+      <a
+        href="https://wasatchbitworks.com"
+        class="text-white hover:text-green-200 transition underline"
+        target="_blank"
+        rel="noopener">Wasatch Bitworks</a
+      >
+    </p>
+    <p class="text-sm text-gray-300">Wasatch BirdWorks · Live bird detections powered by BirdNET-Pi</p>
+    <div class="mt-4 pt-4 border-t border-green-700">
+      <p class="text-sm text-gray-300">Photography by Zachary Kane</p>
+      {generatedAt && (
+        <p class="text-xs text-gray-400 mt-2">Data updated: {toMountainTime(generatedAt)}</p>
+      )}
+    </div>
+  </div>
+</footer>
