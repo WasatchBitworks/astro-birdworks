@@ -2,7 +2,9 @@
 
 Astro rebuild of [wasatchbirdworks.com](https://wasatchbirdworks.com) — live bird detections from the Wasatch Front, powered by BirdNET-Pi and the Bitworks CMS Birds API.
 
-See [astro_birds.md](astro_birds.md) for the migration plan and architecture decisions.
+**Deployed:** https://astro-birdworks.netlify.app (parallel run; wasatchbirdworks.com still points at the Eleventy site until the DNS swap).
+
+See [astro_birds.md](astro_birds.md) for the migration plan, architecture decisions, parity audit, /live failure-mode handling, and the remaining pre-swap checklist.
 
 ## Commands
 

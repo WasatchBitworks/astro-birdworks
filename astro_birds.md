@@ -212,13 +212,14 @@ The server island on /live is the only runtime dependency in the site; both of i
 
 Verification: `npm run verify:live` runs three scenarios locally (happy path; island requests aborted via Playwright routing; dev server with a dead `BIRDS_API_BASE`). After deploying, run `node scripts/verify-live-failure-modes.mjs https://<preview-domain>` to re-check the first two against the real Netlify runtime.
 
-**Remaining manual deploy steps (Netlify dashboard / GitHub):**
-1. Push this repo to GitHub
-2. Create a new Netlify site from the repo (build cmd + publish dir come from netlify.toml; adapter emits the server-island function automatically)
-3. Optional env var: `BIRDS_API_BASE` (defaults to production CMS)
-4. Verify on the preview domain: /live island loads fresh data, audio playback, presence grids, charts, mobile menu
-5. Create a Netlify build hook, add it as `NETLIFY_BUILD_HOOK` GitHub Actions secret (workflow: `.github/workflows/scheduled-build.yml`)
-6. Run in parallel with the Eleventy site; when satisfied, point wasatchbirdworks.com at the new site, confirm Plausible fires, retire birdworks
+**Deploy status (2026-06-12):** ✅ Live on Netlify at **https://astro-birdworks.netlify.app** (site `astro-birdworks`, Wasatch Bitworks team, deploys from `main`). Clean first deploy; no environment variables set — `BIRDS_API_BASE` defaults to the production CMS in code.
+
+**Remaining steps before DNS swap:**
+1. Verify the deployed /live server island on the real function runtime:
+   `npm run verify:live -- https://astro-birdworks.netlify.app` (covers happy path + island-failure watchdog), plus a manual pass: audio playback, presence grids, charts, mobile menu
+2. Hourly rebuilds: create a Netlify build hook (Site configuration → Build & deploy → Build hooks), add its URL as the `NETLIFY_BUILD_HOOK` GitHub Actions secret (workflow: `.github/workflows/scheduled-build.yml` — already wired, runs 6am–10pm MT)
+3. Run in parallel with the Eleventy site for a while; visually diff pages against wasatchbirdworks.com (watch for remaining Tailwind v3→v4 drift like the bg-opacity/border-color regressions already fixed)
+4. When satisfied: point wasatchbirdworks.com DNS at the Netlify site, confirm Plausible records traffic (script is pinned to that domain, so it stays silent on the preview URL — expected), retire the birdworks Eleventy site
 
 ## Open items (decide during build, none blocking)
 
