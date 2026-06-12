@@ -1,0 +1,247 @@
+---
+import type { Photo } from "../../lib/api";
+
+interface Props {
+  photos: Photo[];
+  speciesName: string;
+}
+
+const { photos, speciesName } = Astro.props;
+const first = photos[0]!;
+
+// Lightbox data consumed by the component script
+const lightboxPhotos = photos.map((p) => ({
+  url: p.variants.large?.url ?? "",
+  caption: p.caption ?? "",
+}));
+---
+
+<section class="mb-8" data-species-name={speciesName}>
+  <div class="mb-4">
+    <p class="text-sm text-gray-500 italic">Photography by Zachary Kane</p>
+  </div>
+
+  <!-- Main Photo Display -->
+  <button
+    id="photoViewer"
+    class="w-full bg-white rounded-lg shadow-md overflow-hidden mb-4 hover:shadow-lg transition cursor-pointer group"
+    aria-label="Open photo lightbox"
+  >
+    <div class="relative bg-gray-100" style="min-height: 400px;">
+      <img
+        id="mainPhoto"
+        src={first.variants.large?.url}
+        alt={speciesName}
+        class="w-full h-auto max-h-[600px] object-contain group-hover:opacity-90 transition"
+        loading="eager"
+      />
+      <!-- Lightbox Icon Overlay -->
+      <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-20 transition">
+        <svg class="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7M10 7v6"/>
+        </svg>
+      </div>
+      {first.caption && (
+        <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-4">
+          <p id="photoCaption" class="text-sm">{first.caption}</p>
+        </div>
+      )}
+    </div>
+  </button>
+
+  <!-- Thumbnail Navigation -->
+  {photos.length > 1 && (
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      {photos.map((photo, index) => (
+        <button
+          class:list={[
+            "thumbnail-btn relative bg-gray-100 rounded-lg overflow-hidden hover:ring-2 hover:ring-leaf-green transition",
+            index === 0 && "ring-2 ring-leaf-green",
+          ]}
+          data-photo-index={index}
+          data-large-url={photo.variants.large?.url}
+          data-caption={photo.caption ?? ""}
+          aria-label={`View photo ${index + 1}`}
+        >
+          <img
+            src={photo.variants.thumbnail?.url}
+            alt={speciesName}
+            class="w-full h-32 object-cover"
+            loading="lazy"
+          />
+        </button>
+      ))}
+    </div>
+  )}
+</section>
+
+<!-- Photo Lightbox Modal -->
+<div id="photoLightbox" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+  <button
+    id="lightboxClose"
+    class="absolute top-4 right-4 text-white hover:text-gray-300 transition p-2"
+    style="z-index: 9999;"
+    aria-label="Close lightbox"
+  >
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+
+  <div class="relative w-full h-full flex items-center justify-center p-4">
+    <img id="lightboxImage" src="" alt="Bird photo" class="max-w-full max-h-[90vh] object-contain" />
+
+    {photos.length > 1 && (
+      <>
+        <button
+          id="lightboxPrev"
+          class="absolute left-4 text-white hover:text-gray-300 transition p-3 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full"
+          aria-label="Previous photo"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button
+          id="lightboxNext"
+          class="absolute right-4 text-white hover:text-gray-300 transition p-3 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full"
+          aria-label="Next photo"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </>
+    )}
+  </div>
+
+  <div id="lightboxCounter" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded">
+    <span id="lightboxCurrent">1</span> / <span id="lightboxTotal">{photos.length}</span>
+  </div>
+</div>
+
+<script type="application/json" id="lightboxPhotosData" set:html={JSON.stringify(lightboxPhotos)} />
+
+<script>
+  // Photo viewer + lightbox, ported from birdworks species-detail.js
+  const speciesName =
+    document.querySelector<HTMLElement>("[data-species-name]")?.dataset.speciesName ?? "";
+
+  let currentPhotoIndex = 0;
+  const thumbnailButtons = document.querySelectorAll<HTMLButtonElement>(".thumbnail-btn");
+  const mainPhoto = document.getElementById("mainPhoto") as HTMLImageElement | null;
+  const photoCaption = document.getElementById("photoCaption");
+
+  function showPhoto(index: number) {
+    if (index < 0 || index >= thumbnailButtons.length || !mainPhoto) return;
+
+    currentPhotoIndex = index;
+    const btn = thumbnailButtons[index]!;
+    const largeUrl = btn.dataset.largeUrl;
+    const caption = btn.dataset.caption;
+
+    if (largeUrl) mainPhoto.src = largeUrl;
+    mainPhoto.alt = speciesName;
+
+    if (photoCaption) {
+      if (caption && caption.trim()) {
+        photoCaption.textContent = caption;
+        photoCaption.parentElement!.classList.remove("hidden");
+      } else {
+        photoCaption.parentElement!.classList.add("hidden");
+      }
+    }
+
+    thumbnailButtons.forEach((b, i) => {
+      if (i === index) {
+        b.classList.add("ring-2", "ring-leaf-green");
+      } else {
+        b.classList.remove("ring-2", "ring-leaf-green");
+      }
+    });
+  }
+
+  if (thumbnailButtons.length > 0 && mainPhoto) {
+    thumbnailButtons.forEach((btn, index) => {
+      btn.addEventListener("click", () => showPhoto(index));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        showPhoto((currentPhotoIndex - 1 + thumbnailButtons.length) % thumbnailButtons.length);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        showPhoto((currentPhotoIndex + 1) % thumbnailButtons.length);
+      }
+    });
+  }
+
+  // --- Lightbox ---
+  const photoViewer = document.getElementById("photoViewer");
+  const photoLightbox = document.getElementById("photoLightbox");
+  const lightboxClose = document.getElementById("lightboxClose");
+  const lightboxImage = document.getElementById("lightboxImage") as HTMLImageElement | null;
+  const lightboxPrev = document.getElementById("lightboxPrev");
+  const lightboxNext = document.getElementById("lightboxNext");
+  const lightboxCurrent = document.getElementById("lightboxCurrent");
+
+  const lightboxPhotos: Array<{ url: string; caption: string }> = JSON.parse(
+    document.getElementById("lightboxPhotosData")?.textContent ?? "[]",
+  );
+
+  let lightboxIndex = 0;
+
+  function showLightboxPhoto(index: number) {
+    if (index < 0 || index >= lightboxPhotos.length || !lightboxImage || !lightboxCurrent) return;
+    lightboxImage.src = lightboxPhotos[index]!.url;
+    lightboxImage.alt = speciesName;
+    lightboxCurrent.textContent = String(index + 1);
+  }
+
+  if (photoViewer && photoLightbox) {
+    photoViewer.addEventListener("click", () => {
+      lightboxIndex = currentPhotoIndex;
+      showLightboxPhoto(lightboxIndex);
+      photoLightbox.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    });
+
+    const closeLightbox = () => {
+      photoLightbox.classList.add("hidden");
+      document.body.style.overflow = "";
+    };
+
+    lightboxClose?.addEventListener("click", closeLightbox);
+
+    photoLightbox.addEventListener("click", (e) => {
+      if (e.target === photoLightbox) closeLightbox();
+    });
+
+    lightboxPrev?.addEventListener("click", () => {
+      lightboxIndex = (lightboxIndex - 1 + lightboxPhotos.length) % lightboxPhotos.length;
+      showLightboxPhoto(lightboxIndex);
+    });
+
+    lightboxNext?.addEventListener("click", () => {
+      lightboxIndex = (lightboxIndex + 1) % lightboxPhotos.length;
+      showLightboxPhoto(lightboxIndex);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (photoLightbox.classList.contains("hidden")) return;
+
+      if (e.key === "Escape") {
+        closeLightbox();
+      } else if (e.key === "ArrowLeft" && lightboxPrev) {
+        e.preventDefault();
+        lightboxIndex = (lightboxIndex - 1 + lightboxPhotos.length) % lightboxPhotos.length;
+        showLightboxPhoto(lightboxIndex);
+      } else if (e.key === "ArrowRight" && lightboxNext) {
+        e.preventDefault();
+        lightboxIndex = (lightboxIndex + 1) % lightboxPhotos.length;
+        showLightboxPhoto(lightboxIndex);
+      }
+    });
+  }
+</script>

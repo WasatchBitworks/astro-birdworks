@@ -1,0 +1,17 @@
+---
+// Per-page "Data updated" strip — signals the snapshot nature of build-time data.
+import { toMountainTime } from "../lib/datetime";
+
+interface Props {
+  generatedAt: string;
+  label?: string;
+}
+
+const { generatedAt, label = "Data updated" } = Astro.props;
+---
+
+<footer class="bg-gray-50 py-1 border-t border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+    {label}: {toMountainTime(generatedAt)}
+  </div>
+</footer>

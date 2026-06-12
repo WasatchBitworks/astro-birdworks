@@ -1,0 +1,144 @@
+---
+interface Props {
+  speciesSlug: string;
+}
+
+const { speciesSlug } = Astro.props;
+---
+
+<!-- Today's Detections Section -->
+<section id="todayDetections" class="mb-8" data-species-slug={speciesSlug}>
+  <h2 class="text-2xl font-bold text-forest-green mb-2">Today's Detections</h2>
+  <p class="text-sm text-gray-600 mb-4">Top 5 detections from today, sorted by confidence</p>
+
+  <div id="todayList" class="space-y-3">
+    <!-- Loading state -->
+    <div id="todayLoading" class="bg-white rounded-lg shadow-md p-8 text-center">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-leaf-green mx-auto mb-3"></div>
+      <p class="text-gray-600">Loading today's detections...</p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="todayEmpty" class="hidden bg-gray-50 rounded-lg p-8 text-center">
+    <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <h3 class="text-lg font-semibold text-gray-700 mb-2">No Detections Today</h3>
+    <p class="text-gray-600">This species hasn't been detected yet today. Check back later!</p>
+  </div>
+</section>
+
+<!-- Best Preserved Recordings Section -->
+<section id="audioRecordings" class="mb-8">
+  <h2 class="text-2xl font-bold text-forest-green mb-2">Best Preserved Recordings</h2>
+  <p class="text-sm text-gray-600 mb-4">Top 10 all-time recordings, sorted by confidence</p>
+
+  <div id="audioList" class="space-y-3">
+    <!-- Loading state -->
+    <div id="audioLoading" class="bg-white rounded-lg shadow-md p-8 text-center">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-leaf-green mx-auto mb-3"></div>
+      <p class="text-gray-600">Loading preserved recordings...</p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="audioEmpty" class="hidden bg-gray-50 rounded-lg p-8 text-center">
+    <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+    </svg>
+    <h3 class="text-lg font-semibold text-gray-700 mb-2">No Preserved Recordings</h3>
+    <p class="text-gray-600">No preserved recordings yet. Recordings with ≥90% confidence are permanently saved.</p>
+  </div>
+</section>
+
+<script>
+  import { apiRoot } from "../../lib/client-api";
+  import { slugify } from "../../lib/slug";
+  import { createAudioItem, type AudioDetection } from "../../lib/audio-player";
+
+  const speciesSlug = document.getElementById("todayDetections")?.dataset.speciesSlug;
+
+  const todayListContainer = document.getElementById("todayList");
+  const todayLoadingEl = document.getElementById("todayLoading");
+  const todayEmptyEl = document.getElementById("todayEmpty");
+
+  const audioListContainer = document.getElementById("audioList");
+  const audioLoadingEl = document.getElementById("audioLoading");
+  const audioEmptyEl = document.getElementById("audioEmpty");
+
+  if (speciesSlug) {
+    if (todayListContainer) fetchTodayDetections();
+    if (audioListContainer) fetchPreservedAudio();
+  }
+
+  function fetchTodayDetections() {
+    // Fetch ALL of today's detections and filter for this species
+    fetch(`${apiRoot()}/latest?date=today`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        const speciesDetections: AudioDetection[] = (data.detections || []).filter(
+          (d: { common_name: string }) => slugify(d.common_name) === speciesSlug,
+        );
+
+        // Sort by confidence (highest first) and take top 5
+        speciesDetections.sort((a, b) => b.confidence - a.confidence);
+        renderList(speciesDetections.slice(0, 5), todayListContainer!, todayLoadingEl, todayEmptyEl);
+      })
+      .catch((error) => {
+        console.error("Error fetching today's detections:", error);
+        showFetchError(todayLoadingEl, "Error loading today's detections");
+      });
+  }
+
+  function fetchPreservedAudio() {
+    fetch(`${apiRoot()}/detections/species/${speciesSlug}?preserved=true&limit=10`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        renderList(data.detections || [], audioListContainer!, audioLoadingEl, audioEmptyEl);
+      })
+      .catch((error) => {
+        console.error("Error fetching preserved audio:", error);
+        showFetchError(audioLoadingEl, "Error loading recordings");
+      });
+  }
+
+  function renderList(
+    detections: AudioDetection[],
+    container: HTMLElement,
+    loadingEl: HTMLElement | null,
+    emptyEl: HTMLElement | null,
+  ) {
+    if (loadingEl) loadingEl.style.display = "none";
+
+    if (!detections || detections.length === 0) {
+      emptyEl?.classList.remove("hidden");
+      return;
+    }
+
+    container.innerHTML = "";
+    detections.forEach((detection, index) => {
+      container.appendChild(createAudioItem(detection, index + 1));
+    });
+  }
+
+  function showFetchError(loadingEl: HTMLElement | null, message: string) {
+    if (loadingEl) {
+      loadingEl.innerHTML = `
+        <div class="bg-red-50 rounded-lg p-8 text-center">
+          <svg class="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-red-700 font-medium">${message}</p>
+          <p class="text-red-600 text-sm mt-1">Please try refreshing the page</p>
+        </div>
+      `;
+    }
+  }
+</script>

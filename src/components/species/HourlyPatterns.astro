@@ -1,0 +1,140 @@
+---
+interface Props {
+  speciesSlug: string;
+}
+
+const { speciesSlug } = Astro.props;
+---
+
+<!-- Daily Hourly Activity Patterns (species-specific) -->
+<section id="hourlyPatternsSection" class="mb-8">
+  <h2 class="text-2xl font-bold text-forest-green mb-2">Hourly Activity Patterns</h2>
+  <p class="text-sm text-gray-600 mb-4">Hourly detection patterns for this species over the last 30 days</p>
+
+  <div class="bg-white rounded-lg shadow-md">
+    <div id="hourlyPatternsChart" class="p-6" data-species-slug={speciesSlug}>
+      <!-- Loading state -->
+      <div id="hourlyPatternsLoading" class="text-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-leaf-green mx-auto mb-3"></div>
+        <p class="text-gray-600">Loading activity patterns...</p>
+      </div>
+
+      <!-- Empty state -->
+      <div id="hourlyPatternsEmpty" class="hidden text-center py-12">
+        <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        <p class="text-gray-600">Not enough detection data yet to show activity patterns.</p>
+      </div>
+
+      <!-- Chart rendered here -->
+      <div id="hourlyPatternsContent" class="hidden"></div>
+    </div>
+
+    <!-- Legend -->
+    <div id="hourlyPatternsLegend" class="hidden px-6 pb-6 border-t pt-4">
+      <p class="text-sm text-gray-600 mb-4">
+        <em>Individual daily patterns (thin gray lines) are overlaid with group averages showing typical activity for the busiest and quietest days, plus the overall 30-day rolling average.</em>
+      </p>
+      <div class="text-xs font-semibold text-gray-700 mb-2">Chart Legend:</div>
+      <div class="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-0.5 bg-gray-400 opacity-50"></div>
+          <span><strong class="text-gray-900">Gray lines</strong> = Individual daily patterns</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-1 bg-amber-400"></div>
+          <span><strong class="text-gray-900">Orange line</strong> = Top 10% most active days</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-1 bg-cyan-500"></div>
+          <span><strong class="text-gray-900">Teal line</strong> = Bottom 10% least active days</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-16 h-1 rounded" style="background-color: #4A7C2C;"></div>
+          <span><strong class="text-gray-900">Green line</strong> = 30-day rolling average</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { apiRoot } from "../../lib/client-api";
+  import { slugify } from "../../lib/slug";
+  import {
+    aggregateByDayAndHour,
+    buildActivityPatternsSVG,
+  } from "../../lib/activity-patterns";
+
+  const hourlyPatternsChart = document.getElementById("hourlyPatternsChart");
+  const hourlyPatternsLoading = document.getElementById("hourlyPatternsLoading");
+  const hourlyPatternsEmpty = document.getElementById("hourlyPatternsEmpty");
+  const hourlyPatternsContent = document.getElementById("hourlyPatternsContent");
+  const hourlyPatternsLegend = document.getElementById("hourlyPatternsLegend");
+
+  const speciesSlug = hourlyPatternsChart?.dataset.speciesSlug;
+
+  if (speciesSlug && hourlyPatternsChart) {
+    // Fetch last 30 days of ALL detections, then filter for this species
+    fetch(`${apiRoot()}/detections/recent?days=30`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        const speciesDetections = (data.detections || []).filter(
+          (d: { common_name: string }) => slugify(d.common_name) === speciesSlug,
+        );
+
+        if (speciesDetections.length > 0) {
+          render(speciesDetections);
+        } else {
+          showEmpty();
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching hourly patterns:", error);
+        showError();
+      });
+  }
+
+  function render(detections: Array<{ detected_at: string }>) {
+    if (hourlyPatternsLoading) hourlyPatternsLoading.style.display = "none";
+
+    const aggregated = aggregateByDayAndHour(detections);
+
+    // Need at least 2 days of data to show patterns
+    if (aggregated.days.length < 2) {
+      showEmpty();
+      return;
+    }
+
+    const svg = buildActivityPatternsSVG(aggregated, {
+      ariaLabel: "Daily hourly activity patterns chart",
+    });
+
+    hourlyPatternsContent!.innerHTML = "";
+    hourlyPatternsContent!.appendChild(svg);
+    hourlyPatternsContent!.classList.remove("hidden");
+    hourlyPatternsLegend!.classList.remove("hidden");
+  }
+
+  function showEmpty() {
+    if (hourlyPatternsLoading) hourlyPatternsLoading.style.display = "none";
+    hourlyPatternsEmpty?.classList.remove("hidden");
+  }
+
+  function showError() {
+    if (hourlyPatternsLoading) {
+      hourlyPatternsLoading.innerHTML = `
+        <div class="text-center py-8">
+          <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-gray-600">Unable to load activity patterns</p>
+        </div>
+      `;
+    }
+  }
+</script>

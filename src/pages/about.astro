@@ -1,0 +1,322 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="About BirdWorks"
+  description="Learn how our BirdNET-Pi-based system captures high-quality audio and uses AI to identify birds by their calls and songs."
+>
+  <!-- Page Header -->
+  <section class="bg-gradient-to-r from-purple-700 to-purple-600 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4">
+      <h1 class="text-4xl font-bold mb-4">About BirdWorks</h1>
+      <p class="text-lg text-purple-100">High-fidelity field audio capture + AI-powered bird identification</p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="py-12 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4">
+      <!-- What is BirdNET -->
+      <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">What is BirdNET?</h2>
+        <div class="prose prose-lg text-gray-700">
+          <p class="mb-4">
+            BirdNET is a research platform that uses deep learning and artificial intelligence to identify bird species
+            by their vocalizations. Developed jointly by the Cornell Lab of Ornithology and Chemnitz University of Technology,
+            BirdNET can recognize over 6,000 bird species from around the world.
+          </p>
+          <p class="mb-4">
+            The system analyzes audio recordings and compares them against a massive database of bird calls and songs,
+            providing identification with a confidence score. This technology makes it possible to monitor bird populations
+            continuously and non-invasively.
+          </p>
+        </div>
+      </div>
+
+      <!-- About This Project -->
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg mb-8">
+        <h3 class="font-semibold text-gray-900 mb-3 text-lg">About This Project</h3>
+        <p class="text-gray-700 mb-3">
+          BirdWorks is a real-world field deployment built and maintained by
+          <a href="https://wasatchbitworks.com" class="text-blue-700 hover:text-blue-800 font-medium underline" target="_blank" rel="noopener">Wasatch Bitworks</a>
+          — a small studio that builds fast, data-driven websites and custom systems for niche applications.
+          All bird photography by Zachary Kane.
+        </p>
+        <!-- TODO: Uncomment when case study is published
+        <p class="text-gray-600 text-sm">
+          Want something similar for your own project or organization?
+          <a href="https://wasatchbitworks.com/case-studies/birdworks" class="text-blue-700 hover:text-blue-800 underline font-medium" target="_blank" rel="noopener">
+            Read the BirdWorks case study →
+          </a>
+        </p>
+        -->
+      </div>
+
+      <!-- How It Works -->
+      <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">How Our System Works</h2>
+        <div class="space-y-6">
+          <!-- Step 1: Audio Capture -->
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold">
+              1
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-2">Continuous Audio Capture</h3>
+              <p class="text-gray-600 mb-3">
+                A custom three-microphone array mounted at our Wasatch Front location continuously captures high-fidelity audio.
+                The audio flows through an Alesis MultiMix 8 USB mixer and is recorded in 15-second segments at professional quality
+                (48kHz sample rate, 16-bit stereo) around the clock.
+              </p>
+              <p class="text-xs text-gray-500">
+                <strong>Hardware:</strong> Primo EM272Z1 capsules (phantom-powered) • <strong>Format:</strong> 16-bit PCM stereo • <strong>Elevation:</strong> ~4,500 ft
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2: Local Analysis -->
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold">
+              2
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-2">Local AI Analysis on Raspberry Pi</h3>
+              <p class="text-gray-600 mb-3">
+                A Raspberry Pi 5 running the BirdNET v2.4 neural network processes each audio segment in real-time.
+                The AI compares detected sounds against a trained model of 6,000+ global bird species and assigns confidence scores
+                (0–100%). Detections below 70% confidence are filtered out to reduce false positives.
+              </p>
+              <p class="text-xs text-gray-500">
+                <strong>Device:</strong> Raspberry Pi 5 • <strong>OS:</strong> Debian 12 • <strong>Threshold:</strong> 70% minimum confidence
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 3: Cloud Sync & Storage -->
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold">
+              3
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-2">Cloud Sync & Permanent Archival</h3>
+              <p class="text-gray-600 mb-3">
+                Every 5 minutes, the Raspberry Pi syncs confirmed detections to our cloud backend—a Sinatra/Ruby CMS with PostgreSQL storage.
+                Audio clips are archived on AWS S3 for permanent preservation. All data is stored in UTC and includes full detection metadata
+                and confidence scores.
+              </p>
+              <p class="text-xs text-gray-500">
+                <strong>Sync interval:</strong> 5 minutes • <strong>Database:</strong> PostgreSQL • <strong>Storage:</strong> AWS S3 with lifecycle management
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 4: Public Display -->
+          <div class="flex gap-4">
+            <div class="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-700 font-bold">
+              4
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-2">Website & Public Display</h3>
+              <p class="text-gray-600 mb-3">
+                This website fetches fresh data from our public API and regenerates every hour during daytime hours (6am–10pm MT).
+                Built with Astro and Tailwind CSS, it displays the latest detections, species trends,
+                activity charts, and curated bird photography. The /live page offers real-time updates with a 5-minute refresh interval.
+              </p>
+              <p class="text-xs text-gray-500">
+                <strong>Generator:</strong> Astro v6 • <strong>Hosting:</strong> Netlify CDN • <strong>Builds:</strong> Hourly during active hours (17/day)
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Technical Architecture</h2>
+
+        <!-- Hardware Section -->
+        <div class="mb-8 pb-8 border-b border-gray-200">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">Hardware</h3>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-3">Audio Capture</h4>
+              <ul class="text-gray-600 space-y-2 text-sm">
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>3-Microphone Array:</strong> Custom-built array using wired Primo EM272Z1 capsules (phantom powered)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Audio Interface:</strong> Alesis MultiMix 8 USB mixer — 4 phantom-powered XLR mic inputs (stereo input to Pi)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Recording Format:</strong> 16-bit PCM, stereo, 48kHz</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Segment Length:</strong> 15-second continuous recordings</span></li>
+              </ul>
+            </div>
+            <div>
+              <img src="/images/p48.png" alt="Three-microphone array using Primo EM272Z1 capsules" class="w-full rounded-lg border border-gray-200 mb-2" loading="lazy" />
+              <p class="text-xs text-gray-500">
+                Primo EM272Z1 capsules:
+                <a href="https://micbooster.com/product/primo-em272-microphone-capsule-with-wires/?attribute_pa_single_2_4_matchedcapsules=2matched&v=0b3b97fa6688" target="_blank" rel="noopener" class="text-green-700 hover:underline">
+                  Available at Micbooster
+                </a>
+              </p>
+            </div>
+          </div>
+          <div class="mt-4 p-4 bg-gray-50 rounded">
+            <h4 class="font-semibold text-gray-800 mb-2">Location & Specifications</h4>
+            <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
+              <div><strong>Location:</strong> Wasatch Front, Utah</div>
+              <div><strong>Coordinates:</strong> 40.5608°N, 111.8460°W</div>
+              <div><strong>Elevation:</strong> ~4,500 ft</div>
+              <div><strong>Active Since:</strong> December 22, 2025</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raspberry Pi Section -->
+        <div class="mb-8 pb-8 border-b border-gray-200">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">Raspberry Pi Device</h3>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-3">System Specifications</h4>
+              <ul class="text-gray-600 space-y-2 text-sm">
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Hardware:</strong> Raspberry Pi 5</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Operating System:</strong> Debian 12 (Bookworm)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>AI Model:</strong> BirdNET 6K Global v2.4 (FP16 optimized)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Species Recognition:</strong> 6,000+ global bird species</span></li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-3">Detection Pipeline</h4>
+              <ol class="text-gray-600 space-y-2 text-sm list-decimal list-inside">
+                <li>Audio capture (15-second chunks)</li>
+                <li>BirdNET model analysis</li>
+                <li>Confidence scoring (0-100%)</li>
+                <li>Threshold filtering (70% minimum)</li>
+                <li>Local SQLite storage</li>
+                <li>5-minute cloud sync to CMS</li>
+              </ol>
+            </div>
+          </div>
+          <div class="mt-4 p-4 bg-gray-50 rounded">
+            <h4 class="font-semibold text-gray-800 mb-2">Detection Settings</h4>
+            <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div><strong>Threshold:</strong> 70% confidence</div>
+              <div><strong>Sensitivity:</strong> 1.25× (boosts weak signals)</div>
+              <div><strong>Extraction Format:</strong> FLAC audio clips</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backend Section -->
+        <div class="mb-8 pb-8 border-b border-gray-200">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">Backend (CMS & Database)</h3>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-3">Architecture</h4>
+              <ul class="text-gray-600 space-y-2 text-sm">
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>CMS:</strong> Sinatra/Ruby API (Bitworks CMS)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Database:</strong> PostgreSQL (detection, species, photos, audio)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Photo Storage:</strong> AWS S3 (original + derivatives)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Audio Storage:</strong> AWS S3 (pre-signed URLs)</span></li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-3">Data Management</h4>
+              <ul class="text-gray-600 space-y-2 text-sm">
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Detection Sync:</strong> Every 5 minutes (Pi → CMS)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Data Retention:</strong> Permanent archival</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Photo Management:</strong> Soft-delete, multi-size derivatives</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Timezone:</strong> UTC storage, Mountain Time display</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="mt-4 p-4 bg-gray-50 rounded">
+            <h4 class="font-semibold text-gray-800 mb-2">Public API Endpoints</h4>
+            <p class="text-xs text-gray-500 mb-2">
+              These read-only endpoints power the BirdWorks frontend and are optimized for caching and performance.
+            </p>
+            <div class="text-sm text-gray-600 space-y-1">
+              <div><code class="bg-gray-100 px-2 py-1 rounded">/api/birds/:slug/latest</code> - Recent detections (max 200, cached 1 min)</div>
+              <div><code class="bg-gray-100 px-2 py-1 rounded">/api/birds/:slug/hourly</code> - Hourly species breakdown for day (cached 5 min)</div>
+              <div><code class="bg-gray-100 px-2 py-1 rounded">/api/birds/:slug/daily</code> - Daily detection counts (cached 5 min)</div>
+              <div><code class="bg-gray-100 px-2 py-1 rounded">/api/birds/:slug/detections/species</code> - Species with counts (cached 5 min)</div>
+              <div><code class="bg-gray-100 px-2 py-1 rounded">/api/birds/:slug/photos</code> - Photo metadata (cached 5 min)</div>
+              <div><code class="bg-gray-100 px-2 py-1 rounded">/api/birds/:slug/species/:species_slug/presence</code> - Yearly activity grid (cached 24 hr)</div>
+              <div><code class="bg-gray-100 px-2 py-1 rounded">/api/birds/:slug/audio/:id</code> - Pre-signed audio URLs (no cache)</div>
+              <div class="text-xs text-gray-500 mt-2">All endpoints support CORS for client-side access. Hourly endpoint provides complete day aggregates to handle high-volume detection days efficiently.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Frontend Section -->
+        <div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">Frontend Website</h3>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-3">Technology Stack</h4>
+              <ul class="text-gray-600 space-y-2 text-sm">
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Framework:</strong> Astro v6 (static-first with server islands)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Styling:</strong> Tailwind CSS v4</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Templating:</strong> Astro components (TypeScript)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Hosting:</strong> Netlify (CDN + auto-deploy)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span><strong>Analytics:</strong> Plausible (self-hosted)</span></li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-800 mb-3">Pages & Features</h4>
+              <ul class="text-gray-600 space-y-2 text-sm">
+                <li class="flex items-start"><span class="mr-2">•</span><span>Homepage with stats and featured photos</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span>Live detection feed (5-min auto-refresh)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span>Species index with detection counts</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span>Species detail pages (photos, activity grid, audio)</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span>Photo gallery with featured section</span></li>
+                <li class="flex items-start"><span class="mr-2">•</span><span>Advanced explore dashboard with charts</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="mt-4 p-4 bg-gray-50 rounded">
+            <h4 class="font-semibold text-gray-800 mb-2">Data & Freshness</h4>
+            <div class="text-sm text-gray-600 space-y-2">
+              <div><strong>Data Fetching:</strong> Build-time from public CMS API (no auth required)</div>
+              <div><strong>Update Strategy:</strong> Hourly scheduled rebuilds (6am–10pm Mountain Time, 17/day)</div>
+              <div><strong>Live Updates:</strong> Only live page with client-side 5-minute auto-refresh</div>
+              <div><strong>Data Freshness:</strong> All pages show timestamp ("Data updated: {"{time}"}") to signal snapshot nature</div>
+              <div><strong>Build Time:</strong> Seconds (optimized, single API fetch)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accuracy Note -->
+      <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded">
+        <h3 class="font-semibold text-gray-900 mb-2">Note on Accuracy</h3>
+        <p class="text-gray-700 text-sm">
+          While BirdNET is highly accurate, it's not perfect. Factors like background noise, overlapping calls,
+          and similar-sounding species can affect identification accuracy. Confidence scores help indicate
+          how reliable each detection is. For research use or rare-species confirmation, expert verification is recommended.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Links -->
+  <section class="py-12 bg-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-2xl font-bold mb-6">Learn More</h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        <a href="https://birdnet.cornell.edu/" target="_blank" rel="noopener" class="block p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:shadow-md transition">
+          <h3 class="font-semibold text-gray-900 mb-2">BirdNET Project</h3>
+          <p class="text-sm text-gray-600">Official BirdNET research project by Cornell Lab</p>
+          <span class="text-green-600 text-sm mt-2 inline-block">Visit site →</span>
+        </a>
+        <a href="https://github.com/Nachtzuster/BirdNET-Pi" target="_blank" rel="noopener" class="block p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:shadow-md transition">
+          <h3 class="font-semibold text-gray-900 mb-2">BirdNET-Pi</h3>
+          <p class="text-sm text-gray-600">Open source Raspberry Pi implementation</p>
+          <span class="text-green-600 text-sm mt-2 inline-block">View on GitHub →</span>
+        </a>
+        <a href="https://github.com/WasatchBitworks/birdworks-frontend" target="_blank" rel="noopener" class="block p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition">
+          <h3 class="font-semibold text-gray-900 mb-2">Frontend Source Code</h3>
+          <p class="text-sm text-gray-600">Open source website on GitHub</p>
+          <span class="text-blue-600 text-sm mt-2 inline-block">View on GitHub →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>
