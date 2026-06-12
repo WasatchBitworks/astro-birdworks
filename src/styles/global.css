@@ -17,6 +17,21 @@
   --color-charcoal: #1e293b;
 }
 
+/*
+ * Tailwind v3 compatibility: v4 defaults border color to currentColor, but
+ * the markup ported from birdworks uses bare border-b/border-t for light
+ * gray dividers throughout. Restore the v3 default (gray-200).
+ */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
 @layer components {
   .btn-primary {
     background-color: var(--color-leaf-green);

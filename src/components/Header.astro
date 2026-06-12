@@ -45,12 +45,12 @@ const navLinks = [
     <!-- Mobile Navigation -->
     <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 space-y-3">
       {navLinks.map(({ href, label }) => (
-        <a href={href} class="block py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded transition">{label}</a>
+        <a href={href} class="block py-2 px-4 hover:bg-white/10 rounded transition">{label}</a>
       ))}
     </div>
   </nav>
 </header>
-<div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-40 md:hidden hidden z-30"></div>
+<div id="mobileMenuOverlay" class="fixed inset-0 bg-black/40 md:hidden hidden z-30"></div>
 
 <style>
   /* Mobile menu animations */

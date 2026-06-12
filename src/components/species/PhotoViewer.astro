@@ -36,13 +36,13 @@ const lightboxPhotos = photos.map((p) => ({
         loading="eager"
       />
       <!-- Lightbox Icon Overlay -->
-      <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-20 transition">
+      <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition">
         <svg class="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7M10 7v6"/>
         </svg>
       </div>
       {first.caption && (
-        <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-4">
+        <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-4">
           <p id="photoCaption" class="text-sm">{first.caption}</p>
         </div>
       )}
@@ -76,7 +76,7 @@ const lightboxPhotos = photos.map((p) => ({
 </section>
 
 <!-- Photo Lightbox Modal -->
-<div id="photoLightbox" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+<div id="photoLightbox" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
   <button
     id="lightboxClose"
     class="absolute top-4 right-4 text-white hover:text-gray-300 transition p-2"
@@ -95,7 +95,7 @@ const lightboxPhotos = photos.map((p) => ({
       <>
         <button
           id="lightboxPrev"
-          class="absolute left-4 text-white hover:text-gray-300 transition p-3 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full"
+          class="absolute left-4 text-white hover:text-gray-300 transition p-3 bg-black/30 hover:bg-black/50 rounded-full"
           aria-label="Previous photo"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@ const lightboxPhotos = photos.map((p) => ({
         </button>
         <button
           id="lightboxNext"
-          class="absolute right-4 text-white hover:text-gray-300 transition p-3 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full"
+          class="absolute right-4 text-white hover:text-gray-300 transition p-3 bg-black/30 hover:bg-black/50 rounded-full"
           aria-label="Next photo"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +115,7 @@ const lightboxPhotos = photos.map((p) => ({
     )}
   </div>
 
-  <div id="lightboxCounter" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded">
+  <div id="lightboxCounter" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black/50 px-4 py-2 rounded">
     <span id="lightboxCurrent">1</span> / <span id="lightboxTotal">{photos.length}</span>
   </div>
 </div>
