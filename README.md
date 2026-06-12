@@ -12,6 +12,7 @@ See [astro_birds.md](astro_birds.md) for the migration plan and architecture dec
 | `npm run dev` | Dev server at `localhost:4321` |
 | `npm run build` | Production build to `./dist/` |
 | `npx netlify serve` | Preview the production build locally (Netlify CLI; `astro preview` is not supported by the Netlify adapter) |
+| `npm run verify:live` | Headless-browser check of /live failure modes (CMS down, server-island failure + watchdog). Pass a base URL to run against a deploy. |
 
 ## Environment
 

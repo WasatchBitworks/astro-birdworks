@@ -201,6 +201,17 @@ All five phases are built. Phases 1–4 committed per phase; see git log.
 5. Species page `<title>` no longer doubles the site name
 6. Turnstile function + Netlify Forms wiring dropped (documented as inactive in birdworks)
 
+**/live failure modes (the one new moving part):**
+
+The server island on /live is the only runtime dependency in the site; both of its failure modes are handled and verified in a headless browser (`npm run verify:live`, scripts/verify-live-failure-modes.mjs):
+
+| Failure | Behavior |
+|---|---|
+| CMS API unreachable (island function fine) | The island itself renders "Live Data Temporarily Unavailable" with the rest of the page intact (`LiveFeed.astro` catches its fetch errors). Watchdog stays quiet. |
+| Island route/function failure (non-200, network error, misdeploy) | Astro's runtime leaves the fallback skeleton and the island's script (incl. refresh handlers) never arrives. A **watchdog in the static shell** (live.astro) waits 10s, then swaps the skeleton for a "Live Data Couldn't Load" error state, sets the status text, and wires both "Reload Page" and "Refresh Now" to a full page reload. If the island arrives late (slow cold start), a MutationObserver undoes the watchdog. |
+
+Verification: `npm run verify:live` runs three scenarios locally (happy path; island requests aborted via Playwright routing; dev server with a dead `BIRDS_API_BASE`). After deploying, run `node scripts/verify-live-failure-modes.mjs https://<preview-domain>` to re-check the first two against the real Netlify runtime.
+
 **Remaining manual deploy steps (Netlify dashboard / GitHub):**
 1. Push this repo to GitHub
 2. Create a new Netlify site from the repo (build cmd + publish dir come from netlify.toml; adapter emits the server-island function automatically)
