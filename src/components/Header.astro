@@ -17,7 +17,10 @@ const navLinks = [
     <div class="flex justify-between items-center">
       <div class="flex items-center">
         <a href="/" class="flex items-center">
-          <img src="/images/birdworks_tsp_v2.png" alt="Wasatch BirdWorks Logo" class="h-20 w-auto" />
+          {/* p-0.5: the logo artwork runs to the very edge of the PNG canvas, so
+              sub-pixel rounding (zoom/retina/scroll transform) shaves the wordmark
+              unless it's inset from the element edge */}
+          <img src="/images/birdworks_tsp_v2.png" alt="Wasatch BirdWorks Logo" class="h-20 w-auto p-0.5" />
         </a>
       </div>
 
