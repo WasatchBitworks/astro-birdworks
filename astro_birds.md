@@ -214,11 +214,13 @@ Verification: `npm run verify:live` runs three scenarios locally (happy path; is
 
 **Deploy status (2026-06-12):** ✅ Live on Netlify at **https://astro-birdworks.netlify.app** (site `astro-birdworks`, Wasatch Bitworks team, deploys from `main`). Clean first deploy; no environment variables set — `BIRDS_API_BASE` defaults to the production CMS in code.
 
-**Remaining steps before DNS swap:**
-1. ✅ (2026-06-12) Deployed /live verified on the real function runtime: `npm run verify:live -- https://astro-birdworks.netlify.app` passed all checks (fresh island data, watchdog error state + reload wiring). Also swept every page headlessly: no 4xx/5xx resources; one 500 seen once on a cold start did not reproduce (watchdog covers it). Still pending: a manual pass of audio playback, presence grids, charts, mobile menu
-2. ✅ (2026-06-12) Hourly rebuilds live: Netlify build hook created, triggered hourly at :00 by **Heroku Scheduler** (replaced the planned GitHub Actions workflow; `scheduled-build.yml` removed). Note it runs 24/7 rather than the 6am–10pm MT window the workflow had
-3. Run in parallel with the Eleventy site for a while (full visual diff deemed unnecessary — spot checks of home/explore matched, page heights within ~30px site-wide; still watch for Tailwind v3→v4 drift like the bg-opacity/border-color regressions already fixed)
-4. When satisfied: point wasatchbirdworks.com DNS at the Netlify site, confirm Plausible records traffic (script is pinned to that domain, so it stays silent on the preview URL — expected), retire the birdworks Eleventy site
+**DNS swap complete (2026-06-13):** ✅ wasatchbirdworks.com now points at the Astro site. Domain transferred from the Eleventy Netlify site to `astro-birdworks`; fresh Let's Encrypt cert issued; HTTPS enforced. Repo made public at https://github.com/WasatchBitworks/astro-birdworks.
+
+~~**Remaining steps before DNS swap:**~~
+1. ✅ (2026-06-12) Deployed /live verified on the real function runtime
+2. ✅ (2026-06-12) Hourly rebuilds live via Heroku Scheduler
+3. ✅ (2026-06-13) DNS swapped — wasatchbirdworks.com live on Astro
+4. ✅ (2026-06-13) Repo made public; README rewritten for public consumption
 
 ## Open items (decide during build, none blocking)
 
