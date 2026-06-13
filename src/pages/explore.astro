@@ -14,11 +14,9 @@ const top15Species = birds.species.slice(0, 15);
   description="Interactive charts and visualizations exploring bird detection patterns, activity trends, and species insights."
 >
   <!-- Hero Section -->
-  <section
-    class="relative text-white py-12 md:py-16"
-    style="background: linear-gradient(135deg, var(--color-sky-blue) 0%, var(--color-leaf-green) 50%, var(--color-forest-green) 100%);"
-  >
+  <section class="hero-observatory relative py-12 md:py-16">
     <div class="relative max-w-7xl mx-auto px-4 text-center">
+      <p class="eyebrow">Patterns &amp; Trends</p>
       <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight">Explore Bird Data</h1>
       <p class="text-base sm:text-lg md:text-xl mb-6 max-w-3xl mx-auto text-gray-100 px-2">
         Dive deep into detection patterns, activity trends, and species insights from our BirdNET-Pi monitoring system.
@@ -98,15 +96,15 @@ const top15Species = birds.species.slice(0, 15);
               <span><strong class="text-gray-900">Gray lines</strong> = Individual daily patterns</span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-10 h-1 bg-amber-400"></div>
+              <div class="w-10 h-1 bg-amber-600"></div>
               <span><strong class="text-gray-900">Orange line</strong> = Top 10% most active days (average)</span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-10 h-1 bg-cyan-500"></div>
+              <div class="w-10 h-1 bg-cyan-600"></div>
               <span><strong class="text-gray-900">Teal line</strong> = Bottom 10% least active days (average)</span>
             </div>
             <div class="flex items-center gap-2">
-              <div class="w-16 h-1 rounded" style="background-color: #4A7C2C;"></div>
+              <div class="w-16 h-1 rounded" style="background-color: #3E6A21;"></div>
               <span><strong class="text-gray-900">Green line</strong> = 30-day rolling average</span>
             </div>
           </div>
@@ -187,7 +185,8 @@ const top15Species = birds.species.slice(0, 15);
   <section class="py-12 bg-gray-50">
     <div class="max-w-5xl mx-auto px-4">
       <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-slate-800 mb-4">About This Data</h2>
+        <p class="eyebrow">Methodology</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">About This Data</h2>
       </div>
       <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
         <p class="mb-4">

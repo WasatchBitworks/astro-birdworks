@@ -11,8 +11,7 @@ const navLinks = [
 
 <header
   id="mainHeader"
-  class="text-white py-4 shadow-lg sticky top-0 z-40"
-  style="background: linear-gradient(135deg, #FFFFFF 0%, var(--color-leaf-green) 100%);"
+  class="bg-cream text-gray-800 py-4 shadow-sm sticky top-0 z-40 border-t-[3px] border-t-forest-green border-b border-b-gray-200"
 >
   <nav class="max-w-7xl mx-auto px-4">
     <div class="flex justify-between items-center">
@@ -25,14 +24,14 @@ const navLinks = [
       <!-- Desktop Navigation -->
       <div class="hidden md:flex space-x-8 text-lg">
         {navLinks.map(({ href, label }) => (
-          <a href={href} class="hover:opacity-80 transition">{label}</a>
+          <a href={href} class="font-medium text-gray-700 hover:text-forest-green underline-offset-8 decoration-2 decoration-leaf-green hover:underline transition">{label}</a>
         ))}
       </div>
 
       <!-- Mobile Menu Button -->
       <button
         id="mobileMenuBtn"
-        class="md:hidden p-2 hover:opacity-80 transition"
+        class="md:hidden p-2 text-forest-green hover:opacity-80 transition"
         aria-label="Toggle mobile menu"
         aria-expanded="false"
       >
@@ -45,7 +44,7 @@ const navLinks = [
     <!-- Mobile Navigation -->
     <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 space-y-3">
       {navLinks.map(({ href, label }) => (
-        <a href={href} class="block py-2 px-4 hover:bg-white/10 rounded transition">{label}</a>
+        <a href={href} class="block py-2 px-4 font-medium text-gray-700 hover:bg-green-50 hover:text-forest-green rounded transition">{label}</a>
       ))}
     </div>
   </nav>

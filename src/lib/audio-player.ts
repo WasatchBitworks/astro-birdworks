@@ -162,7 +162,7 @@ function setButtonReady(button: AudioButton) {
 function setButtonPlaying(button: AudioButton) {
   button.disabled = false;
   button.className =
-    "audio-play-btn px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition inline-flex items-center gap-2";
+    "audio-play-btn px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition inline-flex items-center gap-2";
   button.innerHTML = `
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>

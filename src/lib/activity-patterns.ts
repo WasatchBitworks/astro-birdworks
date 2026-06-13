@@ -85,8 +85,8 @@ export function buildActivityPatternsSVG(
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", options.ariaLabel ?? "Hourly activity patterns chart");
 
-  svg.appendChild(svgLine(padding.left, padding.top, padding.left, height - padding.bottom, "#e5e7eb"));
-  svg.appendChild(svgLine(padding.left, height - padding.bottom, width - padding.right, height - padding.bottom, "#e5e7eb"));
+  svg.appendChild(svgLine(padding.left, padding.top, padding.left, height - padding.bottom, "#e6dfd0"));
+  svg.appendChild(svgLine(padding.left, height - padding.bottom, width - padding.right, height - padding.bottom, "#e6dfd0"));
 
   const drawSeries = (dataPoints: number[], color: string, strokeWidth: string, opacity: string) => {
     let pathData = `M ${padding.left} ${height - padding.bottom - dataPoints[0]! * yScale}`;
@@ -106,12 +106,12 @@ export function buildActivityPatternsSVG(
   };
 
   // Individual daily lines (thin, gray)
-  days.forEach((dayKey) => drawSeries(hourlyByDay[dayKey]!, "#9ca3af", "1.5", "0.5"));
+  days.forEach((dayKey) => drawSeries(hourlyByDay[dayKey]!, "#a89c87", "1.5", "0.5"));
 
   // Group averages: top 10% (orange), bottom 10% (teal), rolling (green, bold)
-  drawSeries(topAverage, "#f59e0b", "2", "0.85");
+  drawSeries(topAverage, "#d97706", "2", "0.85");
   drawSeries(bottomAverage, "#0891b2", "2", "0.85");
-  drawSeries(rollingAverage, "#4A7C2C", "3.5", "1");
+  drawSeries(rollingAverage, "#3E6A21", "3.5", "1");
 
   // Data points on rolling average
   for (let hour = 0; hour < 24; hour++) {
@@ -119,28 +119,28 @@ export function buildActivityPatternsSVG(
     dot.setAttribute("cx", String(padding.left + hour * xStep));
     dot.setAttribute("cy", String(height - padding.bottom - rollingAverage[hour]! * yScale));
     dot.setAttribute("r", "3");
-    dot.setAttribute("fill", "#4A7C2C");
+    dot.setAttribute("fill", "#3E6A21");
     svg.appendChild(dot);
   }
 
   // X-axis labels (every 3 hours)
   for (let i = 0; i < 24; i += 3) {
     svg.appendChild(
-      svgText(padding.left + i * xStep, height - padding.bottom + 20, formatChartHour(i), "11px", "#6b7280", "middle"),
+      svgText(padding.left + i * xStep, height - padding.bottom + 20, formatChartHour(i), "11px", "#6d6457", "middle"),
     );
   }
 
   // Y-axis labels
   const yMid = maxValue / 2;
-  const yMidLabel = svgText(padding.left - 10, height - padding.bottom - yMid * yScale, String(Math.round(yMid)), "11px", "#6b7280", "end");
+  const yMidLabel = svgText(padding.left - 10, height - padding.bottom - yMid * yScale, String(Math.round(yMid)), "11px", "#6d6457", "end");
   yMidLabel.setAttribute("dominant-baseline", "middle");
   svg.appendChild(yMidLabel);
 
-  const yMaxLabel = svgText(padding.left - 10, padding.top, String(Math.round(maxValue)), "11px", "#6b7280", "end");
+  const yMaxLabel = svgText(padding.left - 10, padding.top, String(Math.round(maxValue)), "11px", "#6d6457", "end");
   yMaxLabel.setAttribute("dominant-baseline", "middle");
   svg.appendChild(yMaxLabel);
 
-  const yAxisTitle = svgText(15, height / 2, "Detections per hour", "12px", "#9ca3af", "middle");
+  const yAxisTitle = svgText(15, height / 2, "Detections per hour", "12px", "#a89c87", "middle");
   yAxisTitle.setAttribute("dominant-baseline", "middle");
   yAxisTitle.setAttribute("transform", `rotate(-90 15 ${height / 2})`);
   svg.appendChild(yAxisTitle);

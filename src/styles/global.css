@@ -1,28 +1,108 @@
 @import "tailwindcss";
 
 /*
- * Wasatch BirdWorks nature palette.
- * Note: birdworks (Eleventy) used these names in class form (text-forest-green
- * etc.) without ever defining them in tailwind.config.js, so they silently
- * no-opped. Defining them here makes the intended design real.
+ * Wasatch BirdWorks "field observatory" theme.
+ *
+ * Two layers of palette control:
+ *  1. Named nature tokens (forest-green, leaf-green, …) used directly in
+ *     markup — carried over from birdworks but tuned richer/deeper.
+ *  2. Overrides of Tailwind's default gray/green/blue/orange/yellow ramps so
+ *     the hundreds of stock utility classes ported from birdworks (and the
+ *     class strings built in component scripts) pick up warm neutrals and
+ *     forest greens without per-instance edits.
  */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
 
-  --color-forest-green: #2d5016;
-  --color-leaf-green: #4a7c2c;
-  --color-sky-blue: #7bb3e8;
-  --color-earth-brown: #8b6f47;
-  --color-sun-orange: #f4a261;
-  --color-charcoal: #1e293b;
+  /* Named nature palette */
+  --color-pine-deep: #132a0b;
+  --color-forest-green: #1f3d12;
+  --color-leaf-green: #3e6a21;
+  --color-moss: #6f8f4f;
+  --color-sky-blue: #3c688a;
+  --color-earth-brown: #7c5f3d;
+  --color-sun-orange: #b3641f;
+  --color-charcoal: #2b2620;
+  --color-cream: #fcfaf4;
+
+  /* Warm stone neutrals (replaces cool default grays). 500+ darkened for
+     stronger text contrast on the warm backgrounds. */
+  --color-gray-50: #faf8f1;
+  --color-gray-100: #f2eee3;
+  --color-gray-200: #e5ded0;
+  --color-gray-300: #d3c9b6;
+  --color-gray-400: #a89c87;
+  --color-gray-500: #7d7263;
+  --color-gray-600: #5d5546;
+  --color-gray-700: #463f33;
+  --color-gray-800: #2f2a21;
+  --color-gray-900: #211d16;
+  --color-gray-950: #161310;
+
+  /* Rich forest greens */
+  --color-green-50: #f0f4e6;
+  --color-green-100: #dfe8d0;
+  --color-green-200: #c2d4a8;
+  --color-green-300: #9cb97a;
+  --color-green-400: #729a4c;
+  --color-green-500: #4f7d2c;
+  --color-green-600: #3e6a21;
+  --color-green-700: #2f5417;
+  --color-green-800: #25430f;
+  --color-green-900: #1c340b;
+  --color-green-950: #11220a;
+
+  /* Muted lake blue (replaces bright default blues) */
+  --color-blue-50: #eef3f6;
+  --color-blue-100: #dce7ee;
+  --color-blue-200: #b9cedd;
+  --color-blue-300: #8fb0c6;
+  --color-blue-400: #6695b1;
+  --color-blue-500: #4a7a9b;
+  --color-blue-600: #3c688a;
+  --color-blue-700: #2f5573;
+  --color-blue-800: #27475f;
+  --color-blue-900: #1f3a4e;
+
+  /* Ochre (replaces bright default oranges) */
+  --color-orange-50: #faf3e7;
+  --color-orange-100: #f3e4c8;
+  --color-orange-200: #e7c897;
+  --color-orange-300: #d9a865;
+  --color-orange-400: #cb9147;
+  --color-orange-500: #c07b2e;
+  --color-orange-600: #a96424;
+  --color-orange-700: #8a4f1d;
+  --color-orange-800: #6f3f18;
+  --color-orange-900: #5a3415;
+
+  /* Honey (confidence badges, callouts) */
+  --color-yellow-50: #faf6e4;
+  --color-yellow-100: #f2e9c6;
+  --color-yellow-200: #e8d795;
+  --color-yellow-300: #dcc15e;
+  --color-yellow-400: #cda63a;
+  --color-yellow-500: #b88f23;
+  --color-yellow-600: #97731a;
+  --color-yellow-700: #7b5c15;
+  --color-yellow-800: #6b4f12;
+  --color-yellow-900: #574012;
+
+  /* Soft warm shadows with a hairline ring so cards read as crisp framed
+     surfaces instead of floating gray boxes. */
+  --shadow-sm: 0 1px 2px rgb(44 36 18 / 0.06), 0 0 0 1px rgb(44 36 18 / 0.06);
+  --shadow-md: 0 2px 8px -2px rgb(44 36 18 / 0.1), 0 0 0 1px rgb(44 36 18 / 0.07);
+  --shadow-lg: 0 8px 24px -6px rgb(44 36 18 / 0.14), 0 0 0 1px rgb(44 36 18 / 0.07);
+  --shadow-xl: 0 16px 40px -8px rgb(44 36 18 / 0.18), 0 0 0 1px rgb(44 36 18 / 0.06);
 }
 
-/*
- * Tailwind v3 compatibility: v4 defaults border color to currentColor, but
- * the markup ported from birdworks uses bare border-b/border-t for light
- * gray dividers throughout. Restore the v3 default (gray-200).
- */
 @layer base {
+  /*
+   * Tailwind v3 compatibility: v4 defaults border color to currentColor, but
+   * the markup ported from birdworks uses bare border-b/border-t for light
+   * dividers throughout. Restore the v3 default (now warm sand).
+   */
   *,
   ::after,
   ::before,
@@ -30,13 +110,23 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
+
+  /* Serif display face for all headings — the field-guide signature. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
 }
 
 @layer components {
   .btn-primary {
     background-color: var(--color-leaf-green);
     color: #fff;
-    font-weight: 700;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
   }
   .btn-primary:hover {
     background-color: var(--color-forest-green);
@@ -44,5 +134,28 @@
   .badge-live {
     background-color: var(--color-sun-orange);
     color: #fff;
+  }
+
+  /* Shared page-hero treatment: deep pine gradient, replaces the per-page
+     three-color gradients (and the off-palette purple/blue heroes). */
+  .hero-observatory {
+    color: var(--color-cream);
+    background:
+      radial-gradient(ellipse 80% 90% at 85% 10%, rgb(111 143 79 / 0.22), transparent 60%),
+      linear-gradient(165deg, var(--color-pine-deep) 0%, var(--color-forest-green) 65%, #2c5318 100%);
+  }
+
+  /* Small-caps section label above headings. */
+  .eyebrow {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-leaf-green);
+    margin-bottom: 0.5rem;
+  }
+  .hero-observatory .eyebrow {
+    color: var(--color-green-300);
   }
 }
