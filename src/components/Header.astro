@@ -1,4 +1,7 @@
 ---
+import { Image } from "astro:assets";
+import logo from "../assets/birdworks_tsp_v2.png";
+
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/live", label: "Live" },
@@ -17,10 +20,12 @@ const navLinks = [
     <div class="flex justify-between items-center">
       <div class="flex items-center">
         <a href="/" class="flex items-center">
-          {/* p-0.5: the logo artwork runs to the very edge of the PNG canvas, so
-              sub-pixel rounding (zoom/retina/scroll transform) shaves the wordmark
-              unless it's inset from the element edge */}
-          <img src="/images/birdworks_tsp_v2.png" alt="Wasatch BirdWorks Logo" class="h-20 w-auto p-0.5" />
+          {/* astro:assets: emits a small optimized file (vs the 328KB original
+              decoded fresh on every page) with width/height attributes so the
+              header doesn't shift while it loads. height 160 = 2x the h-20 slot.
+              p-0.5: the artwork runs to the very edge of the PNG canvas, so
+              sub-pixel rounding shaves the wordmark unless it's inset. */}
+          <Image src={logo} alt="Wasatch BirdWorks Logo" height={160} loading="eager" class="h-20 w-auto p-0.5" />
         </a>
       </div>
 
