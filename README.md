@@ -174,7 +174,11 @@ Both server island failure modes are handled and tested:
 
 The site fetches from public Bitworks CMS endpoints — no authentication required.
 
+### Birds API
+
 **Base URL:** `https://cms.wasatchbitworks.com/api/birds` (override via `BIRDS_API_BASE`)
+
+**Client slug:** `wasatch-bitworks` (the CMS client record, defined in `src/lib/api.ts`)
 
 | Endpoint | Used for |
 |---|---|
@@ -186,6 +190,42 @@ The site fetches from public Bitworks CMS endpoints — no authentication requir
 | `/:slug/photos` | Photo metadata with variant URLs |
 | `/:slug/species/:slug/presence?days=365` | 365-day presence grid per species |
 | `/:slug/audio/:id` | Pre-signed S3 audio URL |
+
+### SEO API
+
+**Base URL:** `https://cms.wasatchbitworks.com/api/seo`
+
+**Site slug:** `wasatch-birdworks` (the CMS *site* record — different from the client slug above)
+
+| Endpoint | Used for | When |
+|---|---|---|
+| `/wasatch-birdworks/robots.txt` | Generates `robots.txt` content | Build time only |
+
+> **Note:** The birds API uses the *client* slug (`wasatch-bitworks`); the SEO API uses the *site* slug (`wasatch-birdworks`). These are two different concepts in the CMS data model. Do not swap them.
+
+---
+
+## CMS Integration
+
+This site is the presentation layer for two CMS subsystems:
+
+### Birds API (runtime + build-time)
+Detection data, species records, and photos are fetched from the CMS both at build time (static pages) and at request time (the `/live` server island).
+
+### SEO Settings (build-time only)
+`robots.txt` is generated at Netlify build time by fetching `/api/seo/wasatch-birdworks/robots.txt`. The CMS controls:
+
+- **`Allow: /` vs `Disallow: /`** — set via the robots directive in CMS SEO Settings (`/admin/seo/settings`)
+- **`Sitemap:` line** — overridden in `robots.txt.ts` to `/sitemap-index.xml` (Astro's actual path)
+
+The deployed `robots.txt` is a normal static file — the CMS is only involved during builds, not at request time.
+
+**Pre-launch / launch-day workflow:**
+1. Set robots directive to `noindex, nofollow` in CMS SEO settings
+2. Trigger a Netlify build → `robots.txt` becomes `Disallow: /`
+3. On launch day, set directive to `index, follow` → trigger build → crawlers allowed in
+
+No changes to this repo needed for that workflow.
 
 ---
 
