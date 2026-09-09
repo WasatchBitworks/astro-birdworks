@@ -323,7 +323,7 @@ export interface DailySummaryData {
   maxHourly: number;
 }
 
-/** Aggregate detections by species and hour (Mountain Time), top 15 species */
+/** Aggregate detections by species and hour (Mountain Time), all species */
 export function aggregateSpeciesByHour(detections: Array<{ common_name: string; detected_at: string }>): DailySummaryData {
   const speciesMap = new Map<string, SpeciesHourly>();
 
@@ -347,8 +347,7 @@ export function aggregateSpeciesByHour(detections: Array<{ common_name: string; 
   });
 
   const speciesArray = Array.from(speciesMap.values())
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 15);
+    .sort((a, b) => b.total - a.total); // every species detected today (no cap)
 
   let maxHourly = 0;
   speciesArray.forEach((species) => {
@@ -396,7 +395,7 @@ export function getHeatmapColor(intensity: number): string {
 
 /**
  * Convert the hourly API response (hours[].species[].count) into the
- * species-by-hour shape renderDailySummary expects (top 15 by total).
+ * species-by-hour shape renderDailySummary expects (all species, sorted by total).
  * Ported from live-refresh.js updateDailySummaryChartWithHourlyData.
  */
 export function summaryFromHourly(
@@ -417,8 +416,7 @@ export function summaryFromHourly(
   });
 
   const speciesArray = Array.from(speciesMap.values())
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 15);
+    .sort((a, b) => b.total - a.total); // every species detected today (no cap)
 
   let maxHourly = 0;
   speciesArray.forEach((species) => {

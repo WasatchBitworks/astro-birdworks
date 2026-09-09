@@ -28,7 +28,7 @@
 | URL | Source (birdworks) | Notes |
 |---|---|---|
 | `/` | `src/index.html` (356 ln) | Stats cards, featured photos, Activity Overview (daily + hourly charts, top species w/ thumbnails), recent detections, BirdNET intro |
-| `/live` | `src/live.html` (249 ln) | Day stats cards, daily detections summary chart (top 15 + hourly heatmap), detections table w/ pagination + audio, refresh |
+| `/live` | `src/live.html` (249 ln) | Day stats cards, daily detections summary chart (all species + hourly heatmap), detections table w/ pagination + audio, refresh |
 | `/species` | `src/species.html` (181 ln) | Species card grid: photo header, confidence stats, last seen |
 | `/species/:slug` | `src/species-detail.html` (303 ln) | One page per species. Stats, photo viewer, presence grid (365-day calendar), hourly activity patterns chart, today's detections |
 | `/photos` | `src/photos.html` (115 ln) | Featured + recent photo galleries |
