@@ -4,6 +4,12 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Pin Ruby/Python/Go to the versions preinstalled in Netlify's Noble image.
+  # Unpinned, mise compiles newer defaults on every build (~3.5 min of dead
+  # time before our 7s build). None of these are used by the site.
+  RUBY_VERSION = "3.3.6"
+  PYTHON_VERSION = "3.13"
+  GO_VERSION = "1.23"
 
 [[headers]]
   for = "/*"
