@@ -5,9 +5,11 @@
 [build.environment]
   NODE_VERSION = "22"
   # Netlify's Noble image provisions Ruby/Python/Go via mise on every build
-  # even though this site uses none of them. Ruby defaults to compiling from
-  # source (~3.5 min of "make" before our 7s astro build). This flips mise to
-  # a precompiled Ruby download (seconds), same as Python already does.
+  # even though this site uses none of them. Pinning keeps those installs
+  # cached and logged (seconds each) and avoids a from-source Ruby compile.
+  # NOTE (Sep 9, 2026): there is still a ~3.5 min unlogged gap between
+  # "Starting build script" and the Netlify Build banner that is NOT any of
+  # these runtimes, deps, or plugins (all ruled out). Netlify-side; ticket filed.
   MISE_RUBY_COMPILE = "false"
   RUBY_VERSION = "3.4.8"
   PYTHON_VERSION = "3.13"
