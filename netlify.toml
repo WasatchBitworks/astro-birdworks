@@ -9,6 +9,7 @@
   # source (~3.5 min of "make" before our 7s astro build). This flips mise to
   # a precompiled Ruby download (seconds), same as Python already does.
   MISE_RUBY_COMPILE = "false"
+  RUBY_VERSION = "3.4.8"
   PYTHON_VERSION = "3.13"
   GO_VERSION = "1.23"
 
