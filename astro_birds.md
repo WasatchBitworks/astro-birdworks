@@ -222,6 +222,35 @@ Verification: `npm run verify:live` runs three scenarios locally (happy path; is
 3. ✅ (2026-06-13) DNS swapped — wasatchbirdworks.com live on Astro
 4. ✅ (2026-06-13) Repo made public; README rewritten for public consumption
 
+## Netlify build minutes: the 3.5-minute init gap (Sep 2026, closed)
+
+Every deploy takes ~4 min while `astro build` itself is ~7 s. The rest is an unlogged interval in
+Initializing between "Starting build script" and the `@netlify/build` banner. Ruled out in deploy
+logs (Sep 9): npm install (cached, <1 s), the Noble image's mise runtimes (pinned in
+`netlify.toml`, ~1 s each, gap unchanged), build plugins (none), the build command (106 pages, ~5 s).
+
+Netlify Support ticket #1108861 (reply Sep 10): they confirmed the 3m 37s interval, said it is
+Buildbot launching the `@netlify/build` process, that the log cannot break it down, and that no
+project setting controls it. Their only remedy was to run the hook less often.
+
+**Outcome (Sep 11, 2026): hourly rebuilds cut to four a day.** Heroku Scheduler (bitworks-cms app)
+now runs the build hook daily at 12:00, 18:00, 00:00, and 04:00 UTC, i.e. 6am / noon / 6pm / 10pm
+Mountain during daylight time (an hour earlier after clocks fall back; accepted). The 6am build
+picks up overnight owls and fall nocturnal migrants; noon catches the dawn chorus. `/live` is a
+server island and unaffected; home, species, explore, and photos are up to six hours old.
+
+Cost was not the driver. The team is on **legacy Pro**: the Aug 2026 receipt showed a 25,000
+build-minute allowance with 3,561 used across all 11 sites (birdworks was the bulk), so the init
+gap cost nothing. The cut is about not depending on a grandfathered allowance. Current plans
+(checked Sep 10, 2026) bill credits, not minutes: Pro is $20 for 3,000 credits/month and every
+production deploy costs 15 credits regardless of duration. Hourly rebuilds were ~510 deploys/month
+(about 7,650 credits, roughly $50/month there); four a day is ~120 deploys, inside the Pro allowance.
+**Do not migrate the team off legacy Pro** (no added seats, no plan changes, no dashboard "switch
+plans" prompts); matching the legacy allowance would need roughly the $100 tier.
+
+Considered next: a server island for the home page's today strip (today stats + recent detections)
+so the one time-sensitive block stays fresh between builds. Everything else stays static.
+
 ## Open items (decide during build, none blocking)
 
 - View transitions (`<ClientRouter />`): nice polish for species↔photos navigation; try in Phase 5, drop if it fights the scripts

@@ -9,7 +9,10 @@
   # cached and logged (seconds each) and avoids a from-source Ruby compile.
   # NOTE (Sep 9, 2026): there is still a ~3.5 min unlogged gap between
   # "Starting build script" and the Netlify Build banner that is NOT any of
-  # these runtimes, deps, or plugins (all ruled out). Netlify-side; ticket filed.
+  # these runtimes, deps, or plugins (all ruled out). Netlify-side: support
+  # (ticket #1108861, Sep 10) confirmed it is Buildbot launching @netlify/build
+  # and no setting controls it. Accepted; legacy Pro's 25k-minute allowance
+  # covers it. See astro_birds.md "Netlify build minutes".
   MISE_RUBY_COMPILE = "false"
   RUBY_VERSION = "3.4.8"
   PYTHON_VERSION = "3.13"

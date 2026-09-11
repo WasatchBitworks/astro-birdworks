@@ -24,7 +24,7 @@ The site displays real-time detections, species trends, and curated bird photogr
 - **Species Index** — Browse all detected species with photos and detection history
 - **Photo Gallery** — Curated bird photography with metadata
 - **Activity Charts** — Daily trends, hourly patterns, 30-day timelines
-- **Data Freshness** — Rebuilds hourly to keep information current
+- **Data Freshness** — Rebuilds four times a day (6am, noon, 6pm, 10pm MT) to keep information current; the live page fetches per request
 - **Accessible Design** — Responsive, semantic HTML optimized for all devices
 
 ### For Developers
@@ -32,7 +32,7 @@ The site displays real-time detections, species trends, and curated bird photogr
 - **TypeScript Throughout** — Typed API client, utility libraries, and component frontmatter
 - **Hand-Rolled SVG Charts** — No chart library dependency; table fallbacks for no-JS
 - **Failure-Mode Testing** — Headless browser verification of server island error states (`npm run verify:live`)
-- **Hourly Rebuilds** — Heroku Scheduler triggers Netlify builds to keep static pages fresh
+- **Scheduled Rebuilds** — Heroku Scheduler triggers Netlify builds four times a day to keep static pages fresh
 
 ---
 
@@ -145,7 +145,7 @@ node scripts/verify-live-failure-modes.mjs https://your-deploy-url.netlify.app
 
 1. **BirdNET-Pi Device** (Raspberry Pi 5) continuously analyzes audio from a 3-mic field array
 2. **Detections sync** to Bitworks CMS every 5 minutes
-3. **Netlify rebuild** triggered hourly to fetch fresh build-time data
+3. **Netlify rebuild** triggered four times a day (12:00, 18:00, 00:00, 04:00 UTC) to fetch fresh build-time data
 4. **Static pages** generated with current detection data; `/live` island fetches fresh data on every request
 5. **CDN delivery** provides fast page loads worldwide
 
@@ -153,7 +153,7 @@ node scripts/verify-live-failure-modes.mjs https://your-deploy-url.netlify.app
 
 | Source | Freshness |
 |---|---|
-| Static pages (Home, Species, Explore…) | Rebuilt hourly; data max 1 hour old |
+| Static pages (Home, Species, Explore…) | Rebuilt four times a day; data up to ~6 hours old |
 | `/live` server island | Fresh per-request from CMS |
 | In-page refresh | Client-side 5-minute auto-refresh on `/live` |
 
