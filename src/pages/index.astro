@@ -1,32 +1,31 @@
 ---
 import Base from "../layouts/Base.astro";
 import ActivityOverview from "../components/home/ActivityOverview.astro";
-import ConfidenceBadge from "../components/ConfidenceBadge.astro";
 import DataUpdated from "../components/DataUpdated.astro";
 import { getBirdsData } from "../lib/birds";
-import { toMountainDate, toMountainTime } from "../lib/datetime";
 import { slugify } from "../lib/slug";
 
+// The homepage is a build-time snapshot (rebuilt a few times a day). Anything
+// "live" or "today" belongs on /live, which fetches per request.
 const birds = await getBirdsData();
 const totalDetections = birds.species.reduce((sum, s) => sum + s.detection_count, 0);
 const featuredSix = birds.featuredPhotos.slice(0, 6);
-const todayTen = birds.today.slice(0, 10);
 ---
 
 <Base
-  title="Live Bird Detections"
-  description="Real-time bird identification from the Wasatch Front, Utah. Powered by BirdNET-Pi artificial intelligence."
+  title="Bird Detections from the Wasatch Front"
+  description="Bird identification from the Wasatch Front, Utah, recorded around the clock by BirdNET-Pi artificial intelligence."
 >
   <!-- Hero Section -->
   <section class="hero-observatory relative py-14 md:py-24">
     <div class="relative max-w-7xl mx-auto px-4 text-center">
       <p class="eyebrow">Sandy, Utah Field Station</p>
       <h1 class="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight leading-tight">
-        Live Bird Detections<br />
+        Bird Detections<br />
         <span class="text-green-200 text-2xl sm:text-3xl md:text-4xl">from the Wasatch Front</span>
       </h1>
       <p class="text-base sm:text-xl md:text-2xl mb-6 md:mb-8 max-w-3xl mx-auto text-gray-200 px-2">
-         Real-time bird detections powered by BirdNET-Pi.
+         Around-the-clock bird detections powered by BirdNET-Pi.
       </p>
       <div class="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4">
         <a href="/live" class="btn-primary hover:scale-105 px-6 md:px-8 py-3 md:py-4 rounded-lg text-base md:text-lg transition">
@@ -58,13 +57,11 @@ const todayTen = birds.today.slice(0, 10);
           <div class="text-sm text-gray-600 mt-1">All time</div>
         </div>
 
-        <!-- Status -->
+        <!-- Photos -->
         <div class="text-center p-6 rounded-lg bg-gradient-to-br from-orange-50 to-orange-100">
-          <div class="text-4xl font-bold text-orange-800 mb-2">
-            {birds.today.length > 0 ? "✓ Live" : "○ Ready"}
-          </div>
-          <div class="text-gray-700 font-medium">System Status</div>
-          <div class="text-sm text-gray-600 mt-1">Active monitoring</div>
+          <div class="text-4xl font-bold text-orange-800 mb-2">{birds.photos.length}</div>
+          <div class="text-gray-700 font-medium">Photos</div>
+          <div class="text-sm text-gray-600 mt-1">From the field</div>
         </div>
       </div>
     </div>
@@ -132,59 +129,17 @@ const todayTen = birds.today.slice(0, 10);
     </section>
   )}
 
-  <!-- Detections Today -->
+  <!-- Live feed pointer (the data itself lives on /live) -->
   <section class="py-12 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4">
-      <div class="text-center mb-10">
-        <p class="eyebrow">Today's Log</p>
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Detections Today</h2>
-        <p class="text-lg text-gray-600">Birds identified on {toMountainDate(birds.todayDate)}</p>
-      </div>
-
-      {birds.today.length > 0 ? (
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-gray-100 border-b">
-                <tr>
-                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Species</th>
-                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Confidence</th>
-                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {todayTen.map((detection) => (
-                  <tr class="border-b hover:bg-gray-50">
-                    <td class="px-4 py-3">
-                      <div class="font-medium text-gray-900">{detection.common_name}</div>
-                      <div class="text-sm text-gray-500 italic">{detection.scientific_name}</div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <ConfidenceBadge confidence={detection.confidence} />
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">{toMountainTime(detection.detected_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {birds.today.length > 10 && (
-            <div class="px-4 py-3 bg-gray-50 text-center">
-              <a href="/live" class="text-green-700 hover:text-green-900 font-medium">
-                View all {birds.today.length} detections →
-              </a>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div class="bg-white rounded-lg shadow-md p-12 text-center">
-          <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">No detections today yet</h3>
-          <p class="text-gray-600">The system is actively monitoring. Birds detected today will appear here!</p>
-        </div>
-      )}
+    <div class="max-w-3xl mx-auto px-4 text-center">
+      <p class="eyebrow">Right Now</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">What's singing today?</h2>
+      <p class="text-lg text-gray-600 mb-8">
+        Today's detections stream in as they happen on the live page, with confidence scores, timestamps, and audio clips.
+      </p>
+      <a href="/live" class="btn-primary hover:scale-105 px-8 py-4 rounded-lg text-lg inline-block transition">
+        View Live Detections
+      </a>
     </div>
   </section>
 
@@ -201,7 +156,7 @@ const todayTen = birds.today.slice(0, 10);
           Developed by the Cornell Lab of Ornithology and Chemnitz University of Technology, it can recognize over 6,000 bird species worldwide.
         </p>
         <p class="mb-4">
-          Our BirdNET-Pi installation continuously monitors audio from the Wasatch Front in Utah, identifying birds in real-time
+          Our BirdNET-Pi installation continuously monitors audio from the Wasatch Front in Utah, identifying birds as they sing
           and building a comprehensive database of local bird activity.
         </p>
         <div class="text-center mt-8">

@@ -3,5 +3,5 @@ export const site = {
   url: "https://wasatchbirdworks.com",
   defaultOgImage: "/images/og/home.png",
   description:
-    "Live bird detections and species data from the Wasatch Front, Utah. Powered by BirdNET-Pi artificial intelligence for real-time bird identification.",
+    "Bird detections and species data from the Wasatch Front, Utah, recorded around the clock by BirdNET-Pi artificial intelligence.",
 } as const;
